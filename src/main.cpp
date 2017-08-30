@@ -5,8 +5,8 @@
 #include <iostream>
 #include <thread>
 #include <vector>
-#include "Eigen/Eigen/Core"
-#include "Eigen/Eigen/QR"
+#include "Eigen/Core"
+#include "Eigen/QR"
 #include "json.hpp"
 
 using namespace std;
