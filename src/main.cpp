@@ -303,7 +303,7 @@ int main() {
               //as these two points make a tangent line to the car
               //so we can calculate car's yaw angle using these
               //two points
-              double ref_yaw = atan2(ref_y - y_before_ref_y, ref_x - y_before_ref_y);
+              ref_yaw = atan2(ref_y - y_before_ref_y, ref_x - x_before_ref_x);
 
               //add point where the car was before reference point to list of points
               points_x.push_back(x_before_ref_x);
