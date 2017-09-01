@@ -7,7 +7,9 @@
 #include <vector>
 #include "Eigen/Core"
 #include "Eigen/QR"
+#include "Eigen/Dense"
 #include "json.hpp"
+#include "spline.h"
 
 using namespace std;
 
@@ -252,13 +254,103 @@ int main() {
           	// Sensor Fusion Data, a list of all other cars on the same side of the road.
           	auto sensor_fusion = j[1]["sensor_fusion"];
 
+
+
+          	/***********Process Data****************/
+
+          	//reference point where the car is right now
+          	double ref_x = car_x;
+          	double ref_y = car_y;
+          	double ref_yaw = deg2rad(car_yaw);
+
+          	vector<double> points_x;
+            vector<double> points_y;
+
+            //by the time we receive this data simulator may not have
+            //complete our previous 50 points so we are going to consider
+            //them here as well to make transition smooth
+            int prev_path_size = previous_path_x.size();
+
+            //check if there are any points in previous path
+            if (prev_path_size < 2) {
+              //there are not enough points so consider where the car is right now
+              //and where the car was before that (current point) point
+              //so predict past for delta_t = 1
+              double prev_x = car_x - cos(car_yaw);
+              double prev_y = car_y - sin(car_yaw);
+
+              //add point where the car was 1 timestep before
+              points_x.push_back(prev_x);
+              points_y.push_back(prev_y);
+
+              //add point where is car right now
+              points_x.push_back(car_x);
+              points_y.push_back(car_y);
+            } else {
+               //as previous path is still not completed by simulator so
+              //consider end of previous path as reference point for car
+              //(instead of current point which is somewhere in previous path)
+              //to calculate
+              ref_x = previous_path_x[prev_path_size - 1];
+              ref_y = previous_path_y[prev_path_size - 1];
+
+              //get the point before reference point (2nd last point in prev path)
+              double x_before_ref_x = previous_path_x[prev_path_size - 2];
+              double y_before_ref_y = previous_path_y[prev_path_size - 2];
+
+              //as these two points make a tangent line to the car
+              //so we can calculate car's yaw angle using these
+              //two points
+              double ref_yaw = atan2(ref_y - y_before_ref_y, ref_x - y_before_ref_y);
+
+              //add point where the car was before reference point to list of points
+              points_x.push_back(x_before_ref_x);
+              points_y.push_back(y_before_ref_y);
+
+              //add the last point in previous path
+              points_x.push_back(ref_x);
+              points_y.push_back(ref_y);
+            }
+
+            //add 3 more points, each spaced 30m from other in Frenet coordinates
+            //start from where the car is right now
+            //Remember: each lane is 4m wide and we want the car to be in middle of lane
+            double d_coord_for_middle_lane = (2+lane*4);
+            vector<double> next_wp0 = getXY(car_s + 30, d_coord_for_middle_lane, map_waypoints_s, map_waypoints_x, map_waypoints_y);
+            vector<double> next_wp1 = getXY(car_s + 60, d_coord_for_middle_lane, map_waypoints_s, map_waypoints_x, map_waypoints_y);
+            vector<double> next_wp2 = getXY(car_s + 90, d_coord_for_middle_lane, map_waypoints_s, map_waypoints_x, map_waypoints_y);
+
+            //add these 3 points to way points list
+            points_x.push_back(next_wp0[0]);
+            points_y.push_back(next_wp0[1]);
+
+            points_x.push_back(next_wp1[0]);
+            points_y.push_back(next_wp1[1]);
+
+            points_x.push_back(next_wp2[2]);
+            points_y.push_back(next_wp2[2]);
+
+
+            //to make our math easier, let's conver these points
+            //from Global maps coordinates to vehicle coordinates
+            for (int i = 0; i < points_x.size(); ++i) {
+              TransformToVehicleCoordinates(ref_x, ref_y, ref_yaw, points_x[i], points_y[i]);
+            }
+
+            //spline to fit a curve through the way points we have
+            //spline is fitting that makes sure that the curve passes
+            //through the all the points
+            tk::spline spline;
+
+            //fit a spline through the ways points
+            spline.set_points(points_x, points_y);
+
+            /***************END Processing of data***************/
+
           	json msgJson;
 
           	vector<double> next_x_vals;
           	vector<double> next_y_vals;
-
-          	cout << "Car s-coord: " << car_s << endl;
-          	cout << "Car d-coord: " << car_d << endl;
 
           	double dist_inc = 0.5;
           	for (int i = 0; i < 50; ++i) {
