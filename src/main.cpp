@@ -427,7 +427,7 @@ void TransformToVehicleCoordinates(double ref_x, double ref_y, double ref_yaw, d
   double shift_y = y - ref_y;
 
   //rotate (x, y) by ref_yaw in clockwise so that vehicle is at angle 0
-  double new_x = shift_x * cos(0-ref_yaw) + shift_y * sin(0-ref_yaw);
+  double new_x = shift_x * cos(0-ref_yaw) - shift_y * sin(0-ref_yaw);
   double new_y = shift_x * sin(0-ref_yaw) + shift_y * cos(0-ref_yaw);
 
   //update passed params (x, y)
