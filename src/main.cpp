@@ -219,8 +219,8 @@ int main() {
   //define desired velocity
   double ref_velocity = 49.5; //mph
 
-  h.onMessage([&ref_velocity, &lane, &map_waypoints_x,&map_waypoints_y,&map_waypoints_s,&map_waypoints_dx,&map_waypoints_dy](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
-                     uWS::OpCode opCode) {
+  h.onMessage([&ref_velocity, &lane, &map_waypoints_x,&map_waypoints_y,&map_waypoints_s,&map_waypoints_dx,&map_waypoints_dy]
+               (uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, uWS::OpCode opCode) {
     // "42" at the start of the message means there's a websocket message event.
     // The 4 signifies a websocket message
     // The 2 signifies a websocket event
@@ -317,7 +317,7 @@ int main() {
             //add 3 more points, each spaced 30m from other in Frenet coordinates
             //start from where the car is right now
             //Remember: each lane is 4m wide and we want the car to be in middle of lane
-            double d_coord_for_middle_lane = (2+lane*4);
+            double d_coord_for_middle_lane = (2 + 4*lane);
             vector<double> next_wp0 = getXY(car_s + 30, d_coord_for_middle_lane, map_waypoints_s, map_waypoints_x, map_waypoints_y);
             vector<double> next_wp1 = getXY(car_s + 60, d_coord_for_middle_lane, map_waypoints_s, map_waypoints_x, map_waypoints_y);
             vector<double> next_wp2 = getXY(car_s + 90, d_coord_for_middle_lane, map_waypoints_s, map_waypoints_x, map_waypoints_y);
@@ -345,33 +345,88 @@ int main() {
             tk::spline spline;
 
             //fit a spline through the ways points
+            //we will use this fitting to get any point on
+            //this line (extrapolation of points)
             spline.set_points(points_x, points_y);
+
+            //now that we have a spline fitting we
+            //can get any point on this line
+            //(if given x, this spline will give corresponding y)
+            //but we still have to space our points on spline
+            //so that we can achieve our desired velocity
+
+            //our reference velocity is in miles/hour we need to
+            //convert our desired/reference velocity in meters/second for ease
+            //Remember 1 mile = 1.69 km = 1609.34 meters
+            //and 1 hours = 60 mins * 60 secs = 3600
+            double ref_velocity_in_meters_per_second = ref_velocity * (1609.34 / (60*60));
+            cout << "ref velocity m/s: " << ref_velocity_in_meters_per_second << endl;
+
+            //as we need to find the space between points on spline to
+            //to keep our desired velocity, to achieve that
+            //we can define some target on x-axis, target_x,
+            //and then find how many points should be there in between
+            //x-axis=0 and x-axis=target_x so that if we keep our desired
+            //velocity and each time step is 0.02 (20 ms) long then we achieve
+            //our target distance between 0 to target_x, target_dist
+            //
+            //formula: V = d / t
+            //as each timestep = 0.02 secs so
+            //formula: V = d / (0.02 * N)
+            //--> ref_v = target_dist / (0.02 * N)
+            //--> N = target_dist / (0.02 * ref_v)
+
+            double target_x = 30.0;
+            //get the target_x's corresponding y-point on spline
+            double target_y = spline(target_x);
+            double target_dist = sqrt(target_x*target_x + target_y*target_y);
+            double N = target_dist/ (0.02 * ref_velocity_in_meters_per_second);
+
+            //here N is: number of points from 0 to target_dist_x
+            //
+            //--> point_space = target_x / N
+            double point_space = target_x / N;
+
+
+            //now we are ready to generate trajectory points
+            vector<double> next_x_vals;
+            vector<double> next_y_vals;
+
+            //but first let's add points of previous_path
+            //as they have not yet been traversed by simulator
+            //and we considered its end point as the reference point
+            for (int i = 0; i < prev_path_size; ++i) {
+              next_x_vals.push_back(previous_path_x[i]);
+              next_y_vals.push_back(previous_path_y[i]);
+            }
+
+            //now we can generate the remaining points (50 - prev_path.size)
+            //using the spline and point_space
+
+            //as we are in vehicle coordinates so first x is 0
+            double x_start = 0;
+
+            for (int i = 0; i < 50 - prev_path_size; ++i) {
+              double point_x = x_start + point_space;
+              double point_y = spline(point_x);
+
+              //now the current x is the new start x
+              x_start = point_x;
+
+              //convert this point to Global map coordinates which
+              //is what simulator expects
+              TransformFromVehicleToMapCoordinates(ref_x, ref_y, ref_yaw, point_x, point_y);
+
+              //add this point to way points list
+              next_x_vals.push_back(point_x);
+              next_y_vals.push_back(point_y);
+            }
 
             /***************END Processing of data***************/
 
           	json msgJson;
 
-          	vector<double> next_x_vals;
-          	vector<double> next_y_vals;
-
-          	double dist_inc = 0.5;
-          	for (int i = 0; i < 50; ++i) {
-
-          	  //calculate new s
-          	  double new_s = car_s + (i+1) * dist_inc;
-          	  //stay in current lane mid, which is middle lane
-          	  double new_d = 6;
-
-          	  //convert to to global maps coordinates
-          	  vector<double> new_frenet_coords = getXY(new_s, new_d, map_waypoints_s, map_waypoints_x, map_waypoints_y);
-          	  double new_x = new_frenet_coords[0];
-          	  double new_y = new_frenet_coords[1];
-
-          	  next_x_vals.push_back(new_x);
-          	  next_y_vals.push_back(new_y);
-          	}
-
-          	// TODO: define a path made up of (x,y) points that the car will visit sequentially every .02 seconds
+          	// define a path made up of (x,y) points that the car will visit sequentially every .02 seconds
           	msgJson["next_x"] = next_x_vals;
           	msgJson["next_y"] = next_y_vals;
 
