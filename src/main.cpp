@@ -329,11 +329,11 @@ int main() {
             points_x.push_back(next_wp1[0]);
             points_y.push_back(next_wp1[1]);
 
-            points_x.push_back(next_wp2[2]);
-            points_y.push_back(next_wp2[2]);
+            points_x.push_back(next_wp2[0]);
+            points_y.push_back(next_wp2[1]);
 
 
-            //to make our math easier, let's conver these points
+            //to make our math easier, let's convert these points
             //from Global maps coordinates to vehicle coordinates
             for (int i = 0; i < points_x.size(); ++i) {
               TransformToVehicleCoordinates(ref_x, ref_y, ref_yaw, points_x[i], points_y[i]);
