@@ -245,6 +245,25 @@ int main() {
           	vector<double> next_x_vals;
           	vector<double> next_y_vals;
 
+          	cout << "Car s-coord: " << car_s << endl;
+          	cout << "Car d-coord: " << car_d << endl;
+
+          	double dist_inc = 0.5;
+          	for (int i = 0; i < 50; ++i) {
+
+          	  //calculate new s
+          	  double new_s = car_s + (i+1) * dist_inc;
+          	  //stay in current lane mid, which is middle lane
+          	  double new_d = 6;
+
+          	  //convert to to global maps coordinates
+          	  vector<double> new_frenet_coords = getXY(new_s, new_d, map_waypoints_s, map_waypoints_x, map_waypoints_y);
+          	  double new_x = new_frenet_coords[0];
+          	  double new_y = new_frenet_coords[1];
+
+          	  next_x_vals.push_back(new_x);
+          	  next_y_vals.push_back(new_y);
+          	}
 
           	// TODO: define a path made up of (x,y) points that the car will visit sequentially every .02 seconds
           	msgJson["next_x"] = next_x_vals;
