@@ -163,6 +163,8 @@ vector<double> getXY(double s, double d, vector<double> maps_s, vector<double> m
 
 void TransformToVehicleCoordinates(double ref_x, double ref_y, double ref_yaw, double &x, double &y);
 
+void TransformFromVehicleToMapCoordinates(double ref_x, double ref_y, double ref_yaw, double &x, double &y);
+
 int main() {
   uWS::Hub h;
 
@@ -429,6 +431,20 @@ void TransformToVehicleCoordinates(double ref_x, double ref_y, double ref_yaw, d
   //rotate (x, y) by ref_yaw in clockwise so that vehicle is at angle 0
   double new_x = shift_x * cos(0-ref_yaw) - shift_y * sin(0-ref_yaw);
   double new_y = shift_x * sin(0-ref_yaw) + shift_y * cos(0-ref_yaw);
+
+  //update passed params (x, y)
+  x = new_x;
+  y = new_y;
+}
+
+void TransformFromVehicleToMapCoordinates(double ref_x, double ref_y, double ref_yaw, double &x, double &y) {
+  //rotate (x, y) by ref_yaw in counter-clockwise so that vehicle is at angle ref_yaw
+  double rotated_x = x * cos(ref_yaw) - y * sin(ref_yaw);
+  double rotated_y = x * sin(ref_yaw) + y * cos(ref_yaw);
+
+  //translate (x, y) to where vehicle is right now (ref_x, ref_y) in map coordinates
+  double new_x = rotated_x + ref_x;
+  double new_y = rotated_y + ref_y;
 
   //update passed params (x, y)
   x = new_x;
