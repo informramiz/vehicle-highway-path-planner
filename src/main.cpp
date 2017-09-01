@@ -205,6 +205,16 @@ int main() {
 
   cout << "map reading complete" << endl;
 
+  //define some initial states
+  //start lane: 0 means far left lane, 1 means middle lane, 2 means right lane
+  int lane = 1;
+
+  //define SPEED LIMIT
+  const int SPEED_LIMIT = 50; //mph
+
+  //define desired velocity
+  double ref_velocity = 49.5; //mph
+
   h.onMessage([&map_waypoints_x,&map_waypoints_y,&map_waypoints_s,&map_waypoints_dx,&map_waypoints_dy](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
                      uWS::OpCode opCode) {
     // "42" at the start of the message means there's a websocket message event.
