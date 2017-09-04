@@ -217,7 +217,7 @@ int main() {
   const int SPEED_LIMIT = 50; //mph
 
   //define desired velocity
-  double ref_velocity = 49.5; //mph
+  double ref_velocity = 0; //mph
 
   h.onMessage([&ref_velocity, &lane, &map_waypoints_x,&map_waypoints_y,&map_waypoints_s,&map_waypoints_dx,&map_waypoints_dy]
                (uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, uWS::OpCode opCode) {
@@ -254,9 +254,52 @@ int main() {
           	double end_path_d = j[1]["end_path_d"];
 
           	// Sensor Fusion Data, a list of all other cars on the same side of the road.
+          	//The data format for each car is: [ id, x, y, vx, vy, s, d]
           	vector<vector<double>> sensor_fusion = j[1]["sensor_fusion"];
 
+          	bool is_too_close = false;
+          	for (int i = 0; i < sensor_fusion.size(); ++i) {
+          	  //d-coordinate is at index 6
+          	  double other_vehicle_d = sensor_fusion[i][6];
+          	  //s-coordinate is at index 5
+          	  double other_vehicle_s = sensor_fusion[i][5];
+          	  //access vx, vy which are at indexes (3, 4)
+          	  double vx = sensor_fusion[i][3];
+          	  double vy = sensor_fusion[i][4];
 
+          	  //check if this car is in my lane
+          	  //I am adding +2 or -2 to (2+4*lane) formula because other
+          	  //vehicle may not be in lane center and this formula is for lane center
+          	  //so adding +2 or -2 makes the boundary exactly 4 meters so even if
+          	  //vehicle is not at lane center if it is in 4 meter range of lane it
+          	  //will be considered as in-lane vehicle
+          	  if (other_vehicle_d < (2+4*lane+2) && other_vehicle_d > (2+4*lane-2)) {
+          	    //as vehicle is in our lane, so let's predict its `s`
+          	    double other_vehicle_speed = sqrt(vx*vx + vy*vy);
+          	    //predict s = s + delta_t * v
+          	    //also multiply (delta_t * v) term with prev_path_size
+          	    //as simulator may not have completed previous path
+          	    //so vehicle may not be there yet where we are expecting it to be
+          	    double other_vehicle_predicted_s = other_vehicle_s + 0.02 * other_vehicle_speed * previous_path_x.size();
+
+          	    //check if vehicle is infront of ego vehicle
+          	    //and distance between that vehicle and our vehicle is less than 30 meters
+          	    if (other_vehicle_predicted_s > car_s && (other_vehicle_s - car_s) < 30) {
+          	      is_too_close = true;
+          	    }
+          	  }
+
+          	}
+
+
+          	if (is_too_close) {
+          	  //if collision danger then decrease speed
+          	  ref_velocity -= 0.224;
+          	} else if (ref_velocity < 49.5) {
+          	  //if no collision danger and we are under speed limit
+          	  //then increase speed
+          	  ref_velocity += 0.244;
+          	}
 
           	/***********Process Data****************/
 
@@ -269,7 +312,7 @@ int main() {
             vector<double> points_y;
 
             //by the time we receive this data simulator may not have
-            //complete our previous 50 points so we are going to consider
+            //completed our previous 50 points so we are going to consider
             //them here as well to make transition smooth
             int prev_path_size = previous_path_x.size();
 
