@@ -105,6 +105,8 @@ vector<vector<double> > Vehicle::generate_predictions(double horizon) {
     vector<double> check1 = state_at(t);
     vector<double> lane_s = { check1[0], check1[1] };
     predictions.push_back(lane_s);
+
+    t += 0.02;
   }
   return predictions;
 
