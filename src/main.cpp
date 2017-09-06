@@ -13,6 +13,7 @@
 #include "vehicle.h"
 #include "utils.h"
 #include "map_utils.h"
+#include "trajectory_generator.h"
 
 using namespace std;
 
@@ -516,175 +517,18 @@ int MyCode() {
 
           /***********Process Data****************/
 
-          //reference point where the car is right now
-          double ref_x = car_x;
-          double ref_y = car_y;
-          double ref_yaw = Utils::deg2rad(car_yaw);
-
-          vector<double> points_x;
-          vector<double> points_y;
-
-          //by the time we receive this data simulator may not have
-          //completed our previous 50 points so we are going to consider
-          //them here as well to make transition smooth
-          int prev_path_size = previous_path_x.size();
-
-          //check if there are any points in previous path
-          if (prev_path_size < 2) {
-            //there are not enough points so consider where the car is right now
-            //and where the car was before that (current point) point
-            //so predict past for delta_t = 1
-            double prev_x = car_x - cos(car_yaw);
-            double prev_y = car_y - sin(car_yaw);
-
-            //add point where the car was 1 timestep before
-            points_x.push_back(prev_x);
-            points_y.push_back(prev_y);
-
-            //add point where is car right now
-            points_x.push_back(car_x);
-            points_y.push_back(car_y);
-          } else {
-            //as previous path is still not completed by simulator so
-            //consider end of previous path as reference point for car
-            //(instead of current point which is somewhere in previous path)
-            //to calculate
-            ref_x = previous_path_x[prev_path_size - 1];
-            ref_y = previous_path_y[prev_path_size - 1];
-
-            //get the point before reference point (2nd last point in prev path)
-            double x_before_ref_x = previous_path_x[prev_path_size - 2];
-            double y_before_ref_y = previous_path_y[prev_path_size - 2];
-
-            //as these two points make a tangent line to the car
-            //so we can calculate car's yaw angle using these
-            //two points
-            ref_yaw = atan2(ref_y - y_before_ref_y, ref_x - x_before_ref_x);
-
-            //add point where the car was before reference point to list of points
-            points_x.push_back(x_before_ref_x);
-            points_y.push_back(y_before_ref_y);
-
-            //add the last point in previous path
-            points_x.push_back(ref_x);
-            points_y.push_back(ref_y);
-          }
-
-          //add 3 more points, each spaced 30m from other in Frenet coordinates
-          //start from where the car is right now
-          //Remember: each lane is 4m wide and we want the car to be in middle of lane
-          double d_coord_for_middle_lane = (2 + 4*lane);
-          vector<double> next_wp0 = MapUtils::getXY(car_s + 30, d_coord_for_middle_lane);
-          vector<double> next_wp1 = MapUtils::getXY(car_s + 60, d_coord_for_middle_lane);
-          vector<double> next_wp2 = MapUtils::getXY(car_s + 90, d_coord_for_middle_lane);
-
-          //add these 3 points to way points list
-          points_x.push_back(next_wp0[0]);
-          points_y.push_back(next_wp0[1]);
-
-          points_x.push_back(next_wp1[0]);
-          points_y.push_back(next_wp1[1]);
-
-          points_x.push_back(next_wp2[0]);
-          points_y.push_back(next_wp2[1]);
-
-
-          //to make our math easier, let's convert these points
-          //from Global maps coordinates to vehicle coordinates
-          for (int i = 0; i < points_x.size(); ++i) {
-            MapUtils::TransformToVehicleCoordinates(ref_x, ref_y, ref_yaw, points_x[i], points_y[i]);
-          }
-
-          //spline to fit a curve through the way points we have
-          //spline is fitting that makes sure that the curve passes
-          //through the all the points
-          tk::spline spline;
-
-          //fit a spline through the ways points
-          //we will use this fitting to get any point on
-          //this line (extrapolation of points)
-          spline.set_points(points_x, points_y);
-
-          //now that we have a spline fitting we
-          //can get any point on this line
-          //(if given x, this spline will give corresponding y)
-          //but we still have to space our points on spline
-          //so that we can achieve our desired velocity
-
-          //our reference velocity is in miles/hour we need to
-          //convert our desired/reference velocity in meters/second for ease
-          //Remember 1 mile = 1.69 km = 1609.34 meters
-          //and 1 hours = 60 mins * 60 secs = 3600
-          double ref_velocity_in_meters_per_second = ref_velocity * (1609.34 / (60*60));
-          cout << "ref velocity m/s: " << ref_velocity_in_meters_per_second << endl;
-
-          //as we need to find the space between points on spline to
-          //to keep our desired velocity, to achieve that
-          //we can define some target on x-axis, target_x,
-          //and then find how many points should be there in between
-          //x-axis=0 and x-axis=target_x so that if we keep our desired
-          //velocity and each time step is 0.02 (20 ms) long then we achieve
-          //our target distance between 0 to target_x, target_dist
-          //
-          //formula: V = d / t
-          //as each timestep = 0.02 secs so
-          //formula: V = d / (0.02 * N)
-          //--> ref_v = target_dist / (0.02 * N)
-          //--> N = target_dist / (0.02 * ref_v)
-
-          double target_x = 30.0;
-          //get the target_x's corresponding y-point on spline
-          double target_y = spline(target_x);
-          double target_dist = sqrt(target_x*target_x + target_y*target_y);
-          double N = target_dist/ (0.02 * ref_velocity_in_meters_per_second);
-
-          //here N is: number of points from 0 to target_dist_x
-          //
-          //--> point_space = target_x / N
-          double point_space = target_x / N;
-
-
-          //now we are ready to generate trajectory points
-          vector<double> next_x_vals;
-          vector<double> next_y_vals;
-
-          //but first let's add points of previous_path
-          //as they have not yet been traversed by simulator
-          //and we considered its end point as the reference point
-          for (int i = 0; i < prev_path_size; ++i) {
-            next_x_vals.push_back(previous_path_x[i]);
-            next_y_vals.push_back(previous_path_y[i]);
-          }
-
-          //now we can generate the remaining points (50 - prev_path.size)
-          //using the spline and point_space
-
-          //as we are in vehicle coordinates so first x is 0
-          double x_start = 0;
-
-          for (int i = 0; i < 50 - prev_path_size; ++i) {
-            double point_x = x_start + point_space;
-            double point_y = spline(point_x);
-
-            //now the current x is the new start x
-            x_start = point_x;
-
-            //convert this point to Global map coordinates which
-            //is what simulator expects
-            MapUtils::TransformFromVehicleToMapCoordinates(ref_x, ref_y, ref_yaw, point_x, point_y);
-
-            //add this point to way points list
-            next_x_vals.push_back(point_x);
-            next_y_vals.push_back(point_y);
-          }
+          Vehicle ego_vehicle(-1, car_x, car_y, car_s, car_d, Utils::deg2rad(car_yaw), car_speed, 0);
+          TrajectoryGenerator trajectory_generator;
+          Trajectory trajectory = trajectory_generator.GenerateTrajectory(ego_vehicle, previous_path_x,
+              previous_path_y, end_path_s, end_path_d, lane, ref_velocity);
 
           /***************END Processing of data***************/
 
           json msgJson;
 
           // define a path made up of (x,y) points that the car will visit sequentially every .02 seconds
-          msgJson["next_x"] = next_x_vals;
-          msgJson["next_y"] = next_y_vals;
+          msgJson["next_x"] = trajectory.x_values;
+          msgJson["next_y"] = trajectory.y_values;
 
           auto msg = "42[\"control\","+ msgJson.dump()+"]";
 
