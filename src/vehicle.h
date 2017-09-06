@@ -57,7 +57,7 @@ public:
 
   string display() const;
 
-  void increment(int dt = 0.02);
+  void increment(double dt = 0.02);
 
   vector<double> state_at(double t);
 

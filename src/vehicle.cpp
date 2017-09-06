@@ -85,7 +85,7 @@ string Vehicle::display() const{
   return oss.str();
 }
 
-void Vehicle::increment(int dt) {
+void Vehicle::increment(double dt) {
   this->s += this->v * dt;
   this->v += this->a * dt;
 }
