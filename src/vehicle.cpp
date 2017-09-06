@@ -94,7 +94,7 @@ vector<double> Vehicle::state_at(double t) {
    */
   double s = this->s + this->v * t + this->a * t * t / 2;
   double v = this->v + this->a * t;
-  return {this->lane, s, v, this->a};
+  return {double(this->lane), s, v, this->a};
 }
 
 vector<vector<double> > Vehicle::generate_predictions(double horizon = 1) {
