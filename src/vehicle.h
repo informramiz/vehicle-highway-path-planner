@@ -48,6 +48,7 @@ public:
   /**
    * Constructor
    */
+  Vehicle() {};
   Vehicle(int id, double x, double y, double s, double d, double yaw_radians, double v, double a);
 
   /**
