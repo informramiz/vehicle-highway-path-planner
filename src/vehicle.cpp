@@ -86,7 +86,6 @@ string Vehicle::display() const{
 }
 
 void Vehicle::increment(int dt) {
-
   this->s += this->v * dt;
   this->v += this->a * dt;
 }
