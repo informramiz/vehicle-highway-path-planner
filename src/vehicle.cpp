@@ -53,6 +53,7 @@ void Vehicle::remove_first_prediction_for_each(map<int, vector<vector<int> > > &
 Snapshot Vehicle::take_current_state_snapshot() {
   return Snapshot(this->lane,
       this->s,
+      this->d,
       this->v,
       this->a);
 }
