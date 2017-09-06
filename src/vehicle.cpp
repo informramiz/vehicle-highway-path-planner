@@ -97,13 +97,13 @@ vector<double> Vehicle::state_at(double t) {
   return {double(this->lane), s, v, this->a};
 }
 
-vector<vector<double> > Vehicle::generate_predictions(double horizon = 1) {
+vector<vector<double> > Vehicle::generate_predictions(double horizon) {
 
-  vector<vector<int> > predictions;
+  vector<vector<double> > predictions;
   double t = 0;
   while (t < horizon + 0.001) {
-    vector<int> check1 = state_at(t);
-    vector<int> lane_s = { check1[0], check1[1] };
+    vector<double> check1 = state_at(t);
+    vector<double> lane_s = { check1[0], check1[1] };
     predictions.push_back(lane_s);
   }
   return predictions;
