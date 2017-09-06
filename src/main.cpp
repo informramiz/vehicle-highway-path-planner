@@ -327,8 +327,9 @@ int UdacityCode() {
 
                   //check if vehicle is infront of ego vehicle
                   //and distance between that vehicle and our vehicle is less than 30 meters
-                  if (other_vehicle_predicted_s > car_s && (other_vehicle_s - car_s) < 30) {
+                  if (other_vehicle_predicted_s > car_s && (other_vehicle_s - car_s) < 10) {
                     is_too_close = true;
+                    lane = (lane + 1) % 3;
                   }
                 }
 
