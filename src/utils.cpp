@@ -32,6 +32,10 @@ double Utils::deg2rad(double delta_i) {
   return M_PI / 180.0 * delta_i;
 }
 
+double Utils::rad2deg(double x) {
+  return x * 180 / M_PI;
+}
+
 double Utils::logistic(double x) {
   return (2.0 / (1 + exp(-x))) - 1.0;
 }

@@ -79,6 +79,10 @@ public:
    * Converts angle from degree to radians
    */
   static double deg2rad(double delta_i);
+  /**
+   * Converts angle from radians to degrees
+   */
+  static double rad2deg(double x);
 
   static Eigen::VectorXd vectorToVectorXd(vector<double> &v) {
     Eigen::Map<Eigen::VectorXd> new_vector(v.data(), v.size());
