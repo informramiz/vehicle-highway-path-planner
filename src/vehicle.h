@@ -36,6 +36,9 @@ public:
    */
   VectorXd state_at(double t) const;
 
+  double get_d() const;
+  double get_s() const;
+
 private:
   VectorXd start_state_;
 

@@ -88,3 +88,11 @@ VectorXd Vehicle::state_at(double t) const {
   return new_state;
 }
 
+double Vehicle::get_d() const {
+  return start_state_.tail(3)[0];
+}
+
+double Vehicle::get_s() const {
+  return start_state_.head(3)[0];
+}
+
