@@ -1,57 +1,88 @@
 /*
- * vehicle.h
+ * Vehicle.h
  *
- * Helper class. Non-ego vehicles move w/ constant acceleration
- *
- *  Created on: Aug 25, 2017
+ *  Created on: Jul 29, 2017
  *      Author: ramiz
  */
 
-#ifndef VEHICLE_H_
-#define VEHICLE_H_
+#ifndef VEHICLE_H
+#define VEHICLE_H
 
 #include <iostream>
+#include <random>
+#include <sstream>
+#include <fstream>
+#include <math.h>
 #include <vector>
-#include "Eigen/Dense"
+#include <map>
+#include <string>
+#include <iterator>
+#include "snapshot.h"
 
 using namespace std;
-using Eigen::VectorXd;
-
 
 class Vehicle {
 public:
-  /**
-   *  start_state = [s, s_dot, s_ddot, d, d_dot, d_ddot]
-   */
-  Vehicle(VectorXd start_state);
-  /**
-   * [ id, x, y, vx, vy, s, d]
-   */
-  Vehicle(const vector<double> &sensor_fusion_data);
 
+  struct collider {
+
+    bool collision; // is there a collision?
+    int time; // time collision happens
+
+  };
+
+  int L = 1;
+
+  double preferred_buffer = 6; // impacts "keep lane" behavior.
+
+  int lane;
+
+  double s;
+  double d;
+
+  double v;
+
+  double a;
+
+  /**
+   * Constructor
+   */
+  Vehicle(double s, double d, double v, double a);
+
+  /**
+   * Destructor
+   */
   virtual ~Vehicle();
 
-  /**
-   * Predict and returns the state of the vehicle at given timestep
-   */
-  VectorXd state_at(double t) const;
+  void configure(vector<int> road_data);
 
-  double get_d() const;
-  double get_s() const;
+  string display() const;
 
-  void set_s(double s) {
-    start_state_[0] = s;
-  }
+  void increment(int dt=1);
+
+  vector<double> state_at(double t);
+
+  vector<vector<double> > generate_predictions(double horizon=1);
 
 private:
-  VectorXd start_state_;
+  /**
+   * Takes snapshot of current state of vehicle and saves it into snapshot object
+   * @returns  Snapshot object containing current state of vehicle
+   */
+  Snapshot take_current_state_snapshot();
+  /**
+   * Sets current state of vehicle to that of saved in passed snapshot
+   * @param snapshot  snapshot containing state of vehicle to restore from
+   */
+  void restore_state_from_snapshot(const Snapshot& snapshot);
 
   /**
-   * predict new state (d, v, a) at timestep t
-   * using equations of motion
-   * given old state (d, v, a)
+   * @param state, state for which trajectory to calculate
+   * @param predictions, map of predictions of other vehicle's predicted trajectories
+   * @returns Returns trajectory to for reaching given state
    */
-  Eigen::VectorXd predict_coordinate_state(const Eigen::VectorXd& s, double t) const;
+  void remove_first_prediction_for_each(map<int, vector<vector<int> > > &predictions);
+
 };
 
-#endif /* VEHICLE_H_ */
+#endif

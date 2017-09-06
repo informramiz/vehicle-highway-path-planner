@@ -1,98 +1,111 @@
 /*
- * vehicle.cpp
+ * Vehicle.cpp
  *
- *  Created on: Aug 25, 2017
+ *  Created on: Jul 29, 2017
  *      Author: ramiz
  */
 
+#include <cassert>
+#include <iostream>
+#include <algorithm>
 #include "vehicle.h"
+#include <math.h>
+#include <map>
+#include <string>
+#include <iterator>
+#include "Utils.h"
 
 /**
- *  start_state = [s, s_dot, s_ddot, d, d_dot, d_ddot]
+ * Initializes Vehicle
  */
-Vehicle::Vehicle(VectorXd start_state) {
-  this->start_state_ = start_state;
-}
+Vehicle::Vehicle(double s, double d, double v, double a) {
 
-/**
- * [ id, x, y, vx, vy, s, d]
- */
-Vehicle::Vehicle(const vector<double> &sensor_fusion_data) {
-  //access vx, vy which are at indexes (3, 4)
-  double vx = sensor_fusion_data[3];
-  double vy = sensor_fusion_data[4];
-  //s-coordinate is at index 5
-  double s = sensor_fusion_data[5];
-  //d-coordinate is at index 6
-  double d = sensor_fusion_data[6];
-
-  //calculate total speed (s_dot)
-  double s_dot = sqrt(vx*vx + vy*vy);
-
-  VectorXd state(6);
-
-  //start_state = [s, s_dot, s_ddot, d, d_dot, d_ddot]
-  state << s, s_dot, 0, d, 0, 0;
-
-  start_state_ = state;
+  this->lane = Utils::get_lane(d);
+  this->s = s;
+  this->d = d;
+  this->v = v;
+  this->a = a;
 }
 
 Vehicle::~Vehicle() {
-
 }
-/**
- * predict new state (d, v, a) at timestep t
- * using equations of motion
- * given old state (d, v, a)
- */
-VectorXd Vehicle::predict_coordinate_state(const VectorXd& values, double t) const {
-  //predict distance travelled based on velocity and acceleration
-  //S_t+1 = S_t + Vt * t + (a * t^2)/2
-  double d = values[0] + (values[1] * t) + ((1.0 / 2.0) * values[2] * t*t);
 
-  //predict new v
-  //v = v + a*t
-  double v = values[1] + values[2] * t;
-  //predict new acceleration
-  //as acceleration is assumed constant so same as old one
-  double a = values[2];
+void Vehicle::remove_first_prediction_for_each(map<int, vector<vector<int> > > &predictions) {
+  map<int, vector<vector<int> > >::iterator iter = predictions.begin();
 
-  VectorXd new_state(3);
-  new_state << d, v, a;
+  while (iter != predictions.end()) {
+    //map value (second element in iterator) is vector with each vector value a vector: [s, lane]
+    //take a reference to this second vector object so that we can update it
+    vector<vector<int> > &v_preds = iter->second;
 
-  return new_state;
+    //remove first vector of this prediction
+    v_preds.erase(v_preds.begin());
+
+    //move to next vehicle predictions
+    iter++;
+  }
 }
 
 /**
- * predict state of vehicle at timestep t
- * using equations of motion
+ * Takes snapshot of current state of vehicle and saves it into snapshot object
+ * @return  Snapshot object containing current state of vehicle
  */
-VectorXd Vehicle::state_at(double t) const {
-  //extract s-values
-  VectorXd s = start_state_.head(3);
-  //extract d-values
-  VectorXd d = start_state_.tail(3);
-
-  //predict state of vehicle at timestep t
-  //using equations of motion
-
-  //predict s-coordinate values (s, v, a)
-  VectorXd new_s_state = predict_coordinate_state(s, t);
-  //similarly for d-coordinate
-  VectorXd new_d_state = predict_coordinate_state(d, t);
-
-  //concatenate s and d-coordinate values into one vector
-  VectorXd new_state (this->start_state_.rows());
-  new_state << new_s_state, new_d_state;
-
-  return new_state;
+Snapshot Vehicle::take_current_state_snapshot() {
+  return Snapshot(this->lane,
+      this->s,
+      this->v,
+      this->a);
+}
+/**
+ * Sets current state of vehicle to that of saved in passed snapshot
+ * @param snapshot  snapshot containing state of vehicle to restore from
+ */
+void Vehicle::restore_state_from_snapshot(const Snapshot& snapshot) {
+  this->lane = snapshot.lane;
+  this->s = snapshot.s;
+  this->v = snapshot.v;
+  this->a = snapshot.a;
 }
 
-double Vehicle::get_d() const {
-  return start_state_.tail(3)[0];
+string Vehicle::display() const{
+
+  ostringstream oss;
+
+  oss << "s:    " << this->s << "\n";
+  oss << "d:    " << this->d << "\n";
+  oss << "lane: " << this->lane << "\n";
+  oss << "v:    " << this->v << "\n";
+  oss << "a:    " << this->a << "\n";
+
+  return oss.str();
 }
 
-double Vehicle::get_s() const {
-  return start_state_.head(3)[0];
+void Vehicle::increment(int dt) {
+
+  this->s += this->v * dt;
+  this->v += this->a * dt;
+}
+
+vector<double> Vehicle::state_at(double t) {
+
+  /*
+   Predicts state of vehicle in t seconds (assuming constant acceleration)
+   */
+  double s = this->s + this->v * t + this->a * t * t / 2;
+  double v = this->v + this->a * t;
+  return {this->lane, s, v, this->a};
+}
+
+vector<vector<double> > Vehicle::generate_predictions(double horizon = 1) {
+
+  vector<vector<int> > predictions;
+  double t = 0;
+  while (t < horizon + 0.001) {
+    vector<int> check1 = state_at(t);
+    vector<int> lane_s = { check1[0], check1[1] };
+    predictions.push_back(lane_s);
+  }
+  return predictions;
+
 }
 

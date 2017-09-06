@@ -76,11 +76,6 @@ public:
   static double euclidean(double x1, double y1, double x2, double y2);
 
   /**
-   * Calculates Euclidean distance in 3D
-   */
-  static double euclidean_3d(int x1, int y1, double theta_rad1, int x2, int y2, double theta_rad2);
-
-  /**
    * Converts angle from degree to radians
    */
   static double deg2rad(double delta_i);
@@ -101,30 +96,6 @@ public:
    * Useful for cost functions.
    */
   static double logistic(double x);
-
-  /**
-   * Returns the result of a polynomial function
-   */
-  static double solve_polynomial(const VectorXd &coeffs, double x);
-
-  /**
-   * Calculates the derivative of a polynomial with given coefficients and returns
-   * the corresponding coefficients of differentiated function.
-   */
-  static VectorXd differentiate(const VectorXd &coeffs);
-
-  /**
-   * Calculates nearest approach of given `vehicle` and given trajectory `traj`
-   *
-   */
-  static double nearest_approach_to_vehicle(const Trajectory &trajectory, const Vehicle &vehicle);
-
-  /**
-   * Calculates nearest approach to any of the given vehicles and given trajectory
-   */
-  static double nearest_approach_to_any_vehicle(const Trajectory &trajectory, const vector<Vehicle> &vehicles);
-
-  static void plot_trajectory(const Trajectory &trajectory, const Vehicle &vehicle, bool plot_vehicle=false);
 };
 
 #endif /* UTILS_H_ */
