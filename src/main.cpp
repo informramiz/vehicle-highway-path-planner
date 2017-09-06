@@ -701,7 +701,7 @@ int MyCode() {
               start_d << car_d, 0, 0;
 
               VectorXd delta(6);
-              delta << 20, 0, 0, 0, 0, 0;
+              delta << -10, -5, -2, 0, 0, 0;
 
               int index = Utils::find_nearest_vehicle_ahead(vehicles, car_s, car_d);
               printf("Nearest vehicle id: %d\n", index);
@@ -710,7 +710,7 @@ int MyCode() {
               if (index == -1) {
                 cout << "Creating a dummy vehicle" << endl;
                 VectorXd start_state(6);
-                start_state << car_s+30, 0, 0, (2+lane*4), 0, 0;
+                start_state << car_s+100, 0, 0, (2+lane*4), 0, 0;
 
                 Vehicle dummy_v(start_state);
                 vehicles.push_back(dummy_v);
