@@ -106,6 +106,7 @@ vector<vector<double> > Vehicle::generate_predictions(double horizon) {
     vector<double> lane_s = { check1[0], check1[1] };
     predictions.push_back(lane_s);
 
+    //simulator moves to next point after 20ms (0.02)
     t += 0.02;
   }
   return predictions;
