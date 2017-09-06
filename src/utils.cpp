@@ -196,7 +196,7 @@ vector<vector<double> > Utils::get_trajectory_points(const Trajectory &trajector
     count += 1;
 
     if (count >= points_count) {
-//      break;
+      break;
     }
   }
 
@@ -207,7 +207,7 @@ vector<vector<double> > Utils::get_trajectory_points(const Trajectory &trajector
   return pts;
 }
 
-int get_lane(double d) {
+int Utils::get_lane(double d) {
   if (d >= 0 && d <= 4) {
     return 0;
   } else if (d > 4 && d <= 8) {
@@ -215,6 +215,8 @@ int get_lane(double d) {
   } else if (d > 8 && d <= 12) {
     return 2;
   }
+
+  return -1;
 }
 
 int Utils::find_nearest_vehicle_ahead(const vector<Vehicle> &vehicles, double s, double d) {
