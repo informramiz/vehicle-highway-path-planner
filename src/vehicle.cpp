@@ -18,7 +18,7 @@
 /**
  * Initializes Vehicle
  */
-Vehicle::Vehicle(int id, double x, double y, double s, double d, double v, double a) {
+Vehicle::Vehicle(int id, double x, double y, double s, double d, double yaw_radians, double v, double a) {
 
   this->id = id;
   this->x = x;
@@ -26,6 +26,7 @@ Vehicle::Vehicle(int id, double x, double y, double s, double d, double v, doubl
   this->lane = Utils::get_lane(d);
   this->s = s;
   this->d = d;
+  this->yaw = yaw_radians;
   this->v = v;
   this->a = a;
 }

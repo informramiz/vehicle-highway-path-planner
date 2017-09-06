@@ -38,20 +38,17 @@ public:
   int id;
   double x;
   double y;
-
   int lane;
-
   double s;
   double d;
-
+  double yaw;
   double v;
-
   double a;
 
   /**
    * Constructor
    */
-  Vehicle(int id, double x, double y, double s, double d, double v, double a);
+  Vehicle(int id, double x, double y, double s, double d, double yaw_radians, double v, double a);
 
   /**
    * Destructor
