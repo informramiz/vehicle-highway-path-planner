@@ -18,8 +18,11 @@
 /**
  * Initializes Vehicle
  */
-Vehicle::Vehicle(double s, double d, double v, double a) {
+Vehicle::Vehicle(int id, double x, double y, double s, double d, double v, double a) {
 
+  this->id = id;
+  this->x = x;
+  this->y = y;
   this->lane = Utils::get_lane(d);
   this->s = s;
   this->d = d;

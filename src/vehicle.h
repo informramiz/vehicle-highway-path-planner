@@ -35,6 +35,10 @@ public:
 
   double preferred_buffer = 6; // impacts "keep lane" behavior.
 
+  int id;
+  double x;
+  double y;
+
   int lane;
 
   double s;
@@ -47,14 +51,12 @@ public:
   /**
    * Constructor
    */
-  Vehicle(double s, double d, double v, double a);
+  Vehicle(int id, double x, double y, double s, double d, double v, double a);
 
   /**
    * Destructor
    */
   virtual ~Vehicle();
-
-  void configure(vector<int> road_data);
 
   string display() const;
 
