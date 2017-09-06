@@ -10,6 +10,9 @@
 #include "Eigen/Dense"
 #include "json.hpp"
 #include "spline.h"
+#include "vehicle.h"
+#include "utils.h"
+#include "polynomial_trajectory_generator.h"
 
 using namespace std;
 
@@ -641,8 +644,8 @@ int MyCode() {
               double car_speed = j[1]["speed"];
 
               // Previous path data given to the Planner
-              auto previous_path_x = j[1]["previous_path_x"];
-              auto previous_path_y = j[1]["previous_path_y"];
+              vector<double> previous_path_x = j[1]["previous_path_x"];
+              vector<double> previous_path_y = j[1]["previous_path_y"];
               // Previous path's end s and d values
               double end_path_s = j[1]["end_path_s"];
               double end_path_d = j[1]["end_path_d"];
@@ -652,7 +655,12 @@ int MyCode() {
               vector<vector<double>> sensor_fusion = j[1]["sensor_fusion"];
 
               bool is_too_close = false;
+              vector<Vehicle> vehicles;
+
               for (int i = 0; i < sensor_fusion.size(); ++i) {
+                Vehicle vehicle(sensor_fusion[i]);
+                vehicles.push_back(vehicle);
+
                 //d-coordinate is at index 6
                 double other_vehicle_d = sensor_fusion[i][6];
                 //s-coordinate is at index 5
@@ -661,7 +669,7 @@ int MyCode() {
                 double vx = sensor_fusion[i][3];
                 double vy = sensor_fusion[i][4];
 
-                printf("i, vx, vy: %d, %f, %f", i, vx, vy);
+//                printf("i, vx, vy: %d, %f, %f", i, vx, vy);
 
                 //check if this car is in my lane
                 //I am adding +2 or -2 to (2+4*lane) formula because other
@@ -684,182 +692,219 @@ int MyCode() {
                     is_too_close = true;
                   }
                 }
-
               }
 
+              VectorXd start_s(3);
+              start_s << car_s, 0, 0;
 
-              if (is_too_close) {
-                //if collision danger then decrease speed
-                ref_velocity -= 0.224;
-              } else if (ref_velocity < 49.5) {
-                //if no collision danger and we are under speed limit
-                //then increase speed
-                ref_velocity += 0.244;
+              VectorXd start_d(3);
+              start_d << car_d, 0, 0;
+
+              VectorXd delta(6);
+              delta << 20, 0, 0, 0, 0, 0;
+
+              int index = Utils::find_nearest_vehicle_ahead(vehicles, car_s, car_d);
+              printf("Nearest vehicle id: %d\n", index);
+              cout << endl;
+
+              if (index == -1) {
+                cout << "Creating a dummy vehicle" << endl;
+                VectorXd start_state(6);
+                start_state << car_s+30, 0, 0, (2+lane*4), 0, 0;
+
+                Vehicle dummy_v(start_state);
+                vehicles.push_back(dummy_v);
+
+                index = vehicles.size() - 1;
               }
 
-              /***********Process Data****************/
+              PolynomialTrajectoryGenerator ptg;
+              Trajectory best = ptg.generate_trajectory(start_s, start_d, index, delta, 5, vehicles);
+              cout << "found best trajectory" << endl;
+              vector<vector<double> > pts = Utils::get_trajectory_points(best, 50);
 
-              //reference point where the car is right now
-              double ref_x = car_x;
-              double ref_y = car_y;
-              double ref_yaw = deg2rad(car_yaw);
-
-              vector<double> points_x;
-              vector<double> points_y;
-
-              //by the time we receive this data simulator may not have
-              //completed our previous 50 points so we are going to consider
-              //them here as well to make transition smooth
-              int prev_path_size = previous_path_x.size();
-
-              //check if there are any points in previous path
-              if (prev_path_size < 2) {
-                //there are not enough points so consider where the car is right now
-                //and where the car was before that (current point) point
-                //so predict past for delta_t = 1
-                double prev_x = car_x - cos(car_yaw);
-                double prev_y = car_y - sin(car_yaw);
-
-                //add point where the car was 1 timestep before
-                points_x.push_back(prev_x);
-                points_y.push_back(prev_y);
-
-                //add point where is car right now
-                points_x.push_back(car_x);
-                points_y.push_back(car_y);
-              } else {
-                 //as previous path is still not completed by simulator so
-                //consider end of previous path as reference point for car
-                //(instead of current point which is somewhere in previous path)
-                //to calculate
-                ref_x = previous_path_x[prev_path_size - 1];
-                ref_y = previous_path_y[prev_path_size - 1];
-
-                //get the point before reference point (2nd last point in prev path)
-                double x_before_ref_x = previous_path_x[prev_path_size - 2];
-                double y_before_ref_y = previous_path_y[prev_path_size - 2];
-
-                //as these two points make a tangent line to the car
-                //so we can calculate car's yaw angle using these
-                //two points
-                ref_yaw = atan2(ref_y - y_before_ref_y, ref_x - x_before_ref_x);
-
-                //add point where the car was before reference point to list of points
-                points_x.push_back(x_before_ref_x);
-                points_y.push_back(y_before_ref_y);
-
-                //add the last point in previous path
-                points_x.push_back(ref_x);
-                points_y.push_back(ref_y);
-              }
-
-              //add 3 more points, each spaced 30m from other in Frenet coordinates
-              //start from where the car is right now
-              //Remember: each lane is 4m wide and we want the car to be in middle of lane
-              double d_coord_for_middle_lane = (2 + 4*lane);
-              vector<double> next_wp0 = getXY(car_s + 30, d_coord_for_middle_lane, map_waypoints_s, map_waypoints_x, map_waypoints_y);
-              vector<double> next_wp1 = getXY(car_s + 60, d_coord_for_middle_lane, map_waypoints_s, map_waypoints_x, map_waypoints_y);
-              vector<double> next_wp2 = getXY(car_s + 90, d_coord_for_middle_lane, map_waypoints_s, map_waypoints_x, map_waypoints_y);
-
-              //add these 3 points to way points list
-              points_x.push_back(next_wp0[0]);
-              points_y.push_back(next_wp0[1]);
-
-              points_x.push_back(next_wp1[0]);
-              points_y.push_back(next_wp1[1]);
-
-              points_x.push_back(next_wp2[0]);
-              points_y.push_back(next_wp2[1]);
-
-
-              //to make our math easier, let's convert these points
-              //from Global maps coordinates to vehicle coordinates
-              for (int i = 0; i < points_x.size(); ++i) {
-                TransformToVehicleCoordinates(ref_x, ref_y, ref_yaw, points_x[i], points_y[i]);
-              }
-
-              //spline to fit a curve through the way points we have
-              //spline is fitting that makes sure that the curve passes
-              //through the all the points
-              tk::spline spline;
-
-              //fit a spline through the ways points
-              //we will use this fitting to get any point on
-              //this line (extrapolation of points)
-              spline.set_points(points_x, points_y);
-
-              //now that we have a spline fitting we
-              //can get any point on this line
-              //(if given x, this spline will give corresponding y)
-              //but we still have to space our points on spline
-              //so that we can achieve our desired velocity
-
-              //our reference velocity is in miles/hour we need to
-              //convert our desired/reference velocity in meters/second for ease
-              //Remember 1 mile = 1.69 km = 1609.34 meters
-              //and 1 hours = 60 mins * 60 secs = 3600
-              double ref_velocity_in_meters_per_second = ref_velocity * (1609.34 / (60*60));
-//              cout << "ref velocity m/s: " << ref_velocity_in_meters_per_second << endl;
-
-              //as we need to find the space between points on spline to
-              //to keep our desired velocity, to achieve that
-              //we can define some target on x-axis, target_x,
-              //and then find how many points should be there in between
-              //x-axis=0 and x-axis=target_x so that if we keep our desired
-              //velocity and each time step is 0.02 (20 ms) long then we achieve
-              //our target distance between 0 to target_x, target_dist
-              //
-              //formula: V = d / t
-              //as each timestep = 0.02 secs so
-              //formula: V = d / (0.02 * N)
-              //--> ref_v = target_dist / (0.02 * N)
-              //--> N = target_dist / (0.02 * ref_v)
-
-              double target_x = 30.0;
-              //get the target_x's corresponding y-point on spline
-              double target_y = spline(target_x);
-              double target_dist = sqrt(target_x*target_x + target_y*target_y);
-              double N = target_dist/ (0.02 * ref_velocity_in_meters_per_second);
-
-              //here N is: number of points from 0 to target_dist_x
-              //
-              //--> point_space = target_x / N
-              double point_space = target_x / N;
-
-
-              //now we are ready to generate trajectory points
               vector<double> next_x_vals;
               vector<double> next_y_vals;
 
-              //but first let's add points of previous_path
-              //as they have not yet been traversed by simulator
-              //and we considered its end point as the reference point
-              for (int i = 0; i < prev_path_size; ++i) {
-                next_x_vals.push_back(previous_path_x[i]);
-                next_y_vals.push_back(previous_path_y[i]);
+              cout << "total points: " << pts[0].size() << endl;
+              for (int i = 0; i < pts[0].size(); ++i) {
+                vector<double> point = getXY(pts[0][i], pts[1][i], map_waypoints_s, map_waypoints_x, map_waypoints_y);
+                next_x_vals.push_back(point[0]);
+                next_y_vals.push_back(point[1]);
               }
 
-              //now we can generate the remaining points (50 - prev_path.size)
-              //using the spline and point_space
-
-              //as we are in vehicle coordinates so first x is 0
-              double x_start = 0;
-
-              for (int i = 0; i < 50 - prev_path_size; ++i) {
-                double point_x = x_start + point_space;
-                double point_y = spline(point_x);
-
-                //now the current x is the new start x
-                x_start = point_x;
-
-                //convert this point to Global map coordinates which
-                //is what simulator expects
-                TransformFromVehicleToMapCoordinates(ref_x, ref_y, ref_yaw, point_x, point_y);
-
-                //add this point to way points list
-                next_x_vals.push_back(point_x);
-                next_y_vals.push_back(point_y);
-              }
+//              if (is_too_close) {
+//                //if collision danger then decrease speed
+//                ref_velocity -= 0.224;
+//              } else if (ref_velocity < 49.5) {
+//                //if no collision danger and we are under speed limit
+//                //then increase speed
+//                ref_velocity += 0.244;
+//              }
+//
+//              /***********Process Data****************/
+//
+//              //reference point where the car is right now
+//              double ref_x = car_x;
+//              double ref_y = car_y;
+//              double ref_yaw = deg2rad(car_yaw);
+//
+//              vector<double> points_x;
+//              vector<double> points_y;
+//
+//              //by the time we receive this data simulator may not have
+//              //completed our previous 50 points so we are going to consider
+//              //them here as well to make transition smooth
+//              int prev_path_size = previous_path_x.size();
+//
+//              //check if there are any points in previous path
+//              if (prev_path_size < 2) {
+//                //there are not enough points so consider where the car is right now
+//                //and where the car was before that (current point) point
+//                //so predict past for delta_t = 1
+//                double prev_x = car_x - cos(car_yaw);
+//                double prev_y = car_y - sin(car_yaw);
+//
+//                //add point where the car was 1 timestep before
+//                points_x.push_back(prev_x);
+//                points_y.push_back(prev_y);
+//
+//                //add point where is car right now
+//                points_x.push_back(car_x);
+//                points_y.push_back(car_y);
+//              } else {
+//                 //as previous path is still not completed by simulator so
+//                //consider end of previous path as reference point for car
+//                //(instead of current point which is somewhere in previous path)
+//                //to calculate
+//                ref_x = previous_path_x[prev_path_size - 1];
+//                ref_y = previous_path_y[prev_path_size - 1];
+//
+//                //get the point before reference point (2nd last point in prev path)
+//                double x_before_ref_x = previous_path_x[prev_path_size - 2];
+//                double y_before_ref_y = previous_path_y[prev_path_size - 2];
+//
+//                //as these two points make a tangent line to the car
+//                //so we can calculate car's yaw angle using these
+//                //two points
+//                ref_yaw = atan2(ref_y - y_before_ref_y, ref_x - x_before_ref_x);
+//
+//                //add point where the car was before reference point to list of points
+//                points_x.push_back(x_before_ref_x);
+//                points_y.push_back(y_before_ref_y);
+//
+//                //add the last point in previous path
+//                points_x.push_back(ref_x);
+//                points_y.push_back(ref_y);
+//              }
+//
+//              //add 3 more points, each spaced 30m from other in Frenet coordinates
+//              //start from where the car is right now
+//              //Remember: each lane is 4m wide and we want the car to be in middle of lane
+//              double d_coord_for_middle_lane = (2 + 4*lane);
+//              vector<double> next_wp0 = getXY(car_s + 30, d_coord_for_middle_lane, map_waypoints_s, map_waypoints_x, map_waypoints_y);
+//              vector<double> next_wp1 = getXY(car_s + 60, d_coord_for_middle_lane, map_waypoints_s, map_waypoints_x, map_waypoints_y);
+//              vector<double> next_wp2 = getXY(car_s + 90, d_coord_for_middle_lane, map_waypoints_s, map_waypoints_x, map_waypoints_y);
+//
+//              //add these 3 points to way points list
+//              points_x.push_back(next_wp0[0]);
+//              points_y.push_back(next_wp0[1]);
+//
+//              points_x.push_back(next_wp1[0]);
+//              points_y.push_back(next_wp1[1]);
+//
+//              points_x.push_back(next_wp2[0]);
+//              points_y.push_back(next_wp2[1]);
+//
+//
+//              //to make our math easier, let's convert these points
+//              //from Global maps coordinates to vehicle coordinates
+//              for (int i = 0; i < points_x.size(); ++i) {
+//                TransformToVehicleCoordinates(ref_x, ref_y, ref_yaw, points_x[i], points_y[i]);
+//              }
+//
+//              //spline to fit a curve through the way points we have
+//              //spline is fitting that makes sure that the curve passes
+//              //through the all the points
+//              tk::spline spline;
+//
+//              //fit a spline through the ways points
+//              //we will use this fitting to get any point on
+//              //this line (extrapolation of points)
+//              spline.set_points(points_x, points_y);
+//
+//              //now that we have a spline fitting we
+//              //can get any point on this line
+//              //(if given x, this spline will give corresponding y)
+//              //but we still have to space our points on spline
+//              //so that we can achieve our desired velocity
+//
+//              //our reference velocity is in miles/hour we need to
+//              //convert our desired/reference velocity in meters/second for ease
+//              //Remember 1 mile = 1.69 km = 1609.34 meters
+//              //and 1 hours = 60 mins * 60 secs = 3600
+//              double ref_velocity_in_meters_per_second = ref_velocity * (1609.34 / (60*60));
+////              cout << "ref velocity m/s: " << ref_velocity_in_meters_per_second << endl;
+//
+//              //as we need to find the space between points on spline to
+//              //to keep our desired velocity, to achieve that
+//              //we can define some target on x-axis, target_x,
+//              //and then find how many points should be there in between
+//              //x-axis=0 and x-axis=target_x so that if we keep our desired
+//              //velocity and each time step is 0.02 (20 ms) long then we achieve
+//              //our target distance between 0 to target_x, target_dist
+//              //
+//              //formula: V = d / t
+//              //as each timestep = 0.02 secs so
+//              //formula: V = d / (0.02 * N)
+//              //--> ref_v = target_dist / (0.02 * N)
+//              //--> N = target_dist / (0.02 * ref_v)
+//
+//              double target_x = 30.0;
+//              //get the target_x's corresponding y-point on spline
+//              double target_y = spline(target_x);
+//              double target_dist = sqrt(target_x*target_x + target_y*target_y);
+//              double N = target_dist/ (0.02 * ref_velocity_in_meters_per_second);
+//
+//              //here N is: number of points from 0 to target_dist_x
+//              //
+//              //--> point_space = target_x / N
+//              double point_space = target_x / N;
+//
+//
+//              //now we are ready to generate trajectory points
+//              vector<double> next_x_vals;
+//              vector<double> next_y_vals;
+//
+//              //but first let's add points of previous_path
+//              //as they have not yet been traversed by simulator
+//              //and we considered its end point as the reference point
+//              for (int i = 0; i < prev_path_size; ++i) {
+//                next_x_vals.push_back(previous_path_x[i]);
+//                next_y_vals.push_back(previous_path_y[i]);
+//              }
+//
+//              //now we can generate the remaining points (50 - prev_path.size)
+//              //using the spline and point_space
+//
+//              //as we are in vehicle coordinates so first x is 0
+//              double x_start = 0;
+//
+//              for (int i = 0; i < 50 - prev_path_size; ++i) {
+//                double point_x = x_start + point_space;
+//                double point_y = spline(point_x);
+//
+//                //now the current x is the new start x
+//                x_start = point_x;
+//
+//                //convert this point to Global map coordinates which
+//                //is what simulator expects
+//                TransformFromVehicleToMapCoordinates(ref_x, ref_y, ref_yaw, point_x, point_y);
+//
+//                //add this point to way points list
+//                next_x_vals.push_back(point_x);
+//                next_y_vals.push_back(point_y);
+//              }
 
               /***************END Processing of data***************/
 
@@ -918,6 +963,8 @@ int MyCode() {
 
     return 0;
 }
+
+
 
 
 
