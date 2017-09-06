@@ -24,6 +24,8 @@ public:
 
   static void TransformToVehicleCoordinates(double ref_x, double ref_y, double ref_yaw, double &x, double &y);
   static void TransformFromVehicleToMapCoordinates(double ref_x, double ref_y, double ref_yaw, double &x, double &y);
+  static int GetLane(double d);
+  static double GetdValueForLaneCenter(int lane);
 private:
   static void CheckInitialization();
 

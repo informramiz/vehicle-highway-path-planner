@@ -202,4 +202,21 @@ void MapUtils::TransformFromVehicleToMapCoordinates(double ref_x, double ref_y, 
   y = new_y;
 }
 
+int MapUtils::GetLane(double d) {
+  if (d >= 0 && d <= 4) {
+    return 0;
+  } else if (d > 4 && d <= 8) {
+    return 1;
+  } else if (d > 8 && d <= 12) {
+    return 2;
+  }
+
+  return -1;
+}
+
+double MapUtils::GetdValueForLaneCenter(int lane) {
+  //as car drives in center so add 2m for to count current lane
+  //and as each lane is 4m so multiply by 4 to count other lanes before on left
+  return 2 + lane * 4;
+}
 

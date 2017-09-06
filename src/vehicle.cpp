@@ -13,7 +13,7 @@
 #include <map>
 #include <string>
 #include <iterator>
-#include "utils.h"
+#include "map_utils.h"
 
 /**
  * Initializes Vehicle
@@ -23,7 +23,7 @@ Vehicle::Vehicle(int id, double x, double y, double s, double d, double yaw_radi
   this->id = id;
   this->x = x;
   this->y = y;
-  this->lane = Utils::get_lane(d);
+  this->lane = MapUtils::GetLane(d);
   this->s = s;
   this->d = d;
   this->yaw = yaw_radians;
