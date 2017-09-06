@@ -8,28 +8,22 @@
 #ifndef TRAJECTORY_H_
 #define TRAJECTORY_H_
 
-#include "Eigen/Dense"
+#include <vector>
 
-using Eigen::VectorXd;
+using namespace std;
 
 /**
  * A passive object to contain Jerk Minimized Trajectory information
  */
 
 struct Trajectory {
-  ///duration of of trajectory
-  double t;
+  //cartesian coordinates
+  vector<double> x_values;
+  vector<double> y_values;
 
-  ///s-coordinate polynomial trajectory coefficients
-  VectorXd s_coeffs;
-
-  ///d-coordinate polynomial trajectory coefficients
-  VectorXd d_coeffs;
-
-  Trajectory(VectorXd &s_coeffs, VectorXd &d_coeffs, double t) {
-    this->s_coeffs = s_coeffs;
-    this->d_coeffs = d_coeffs;
-    this->t = t;
+  Trajectory(const vector<double> &x_values, const vector<double> &y_values) {
+    this->x_values = x_values;
+    this->y_values = y_values;
   }
 };
 
