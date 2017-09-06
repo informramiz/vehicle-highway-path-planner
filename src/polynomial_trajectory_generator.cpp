@@ -62,7 +62,6 @@ Trajectory PolynomialTrajectoryGenerator::generate_trajectory(const VectorXd &st
                                  const Goal &goal,
                                  double T,
                                  const vector<Vehicle> &predictions) {
-  double timestep = 0.5;
 
   vector<Goal> all_goals;
   vector<Goal> perturbed_goals = generate_perturbed_goals(goal);

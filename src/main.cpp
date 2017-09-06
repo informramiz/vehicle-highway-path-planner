@@ -719,7 +719,7 @@ int MyCode() {
               }
 
               PolynomialTrajectoryGenerator ptg;
-              Trajectory best = ptg.generate_trajectory(start_s, start_d, index, delta, 5, vehicles);
+              Trajectory best = ptg.generate_trajectory(start_s, start_d, index, delta, 3, vehicles);
               cout << "found best trajectory" << endl;
               vector<vector<double> > pts = Utils::get_trajectory_points(best, 50);
 

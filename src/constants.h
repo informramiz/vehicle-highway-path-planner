@@ -16,7 +16,7 @@ public:
   static const int N_SAMPLES = 10;
   static const vector<double> SIGMA_S;
   static const vector<double> SIGMA_D;
-  constexpr static const double SIGMA_T = 4;
+  constexpr static const double SIGMA_T = 1;
 
   constexpr static const double MAX_JERK = 10; // m/s^3
   constexpr static const double MAX_ACCELERATION = 10; // m/s^2

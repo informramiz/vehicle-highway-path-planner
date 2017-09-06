@@ -178,7 +178,7 @@ vector<vector<double> > Utils::get_trajectory_points(const Trajectory &trajector
   vector<double> vehicle_d_values;
 
   int count = 0;
-  //for each timestep of 0.25 till total time/duration of trajectory.t
+  //for each timestep till total time/duration of trajectory.t
   double t = 0;
   while (t <= trajectory.t + 0.01) {
     //use trajectory s_coefficients to solve polynomial function of time at time t
@@ -192,11 +192,11 @@ vector<vector<double> > Utils::get_trajectory_points(const Trajectory &trajector
     trajectory_d_values.push_back(trajectory_d);
 
     //increment time
-    t += 0.25;
+    t += 0.009;
     count += 1;
 
     if (count >= points_count) {
-      break;
+//      break;
     }
   }
 
