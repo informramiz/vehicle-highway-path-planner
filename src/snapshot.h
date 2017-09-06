@@ -31,7 +31,7 @@ struct Snapshot {
  }
 
  void print() const{
-   printf("Lane %d, s %f, d %f, v %f, a %f, state %s \n", lane, s, d, v, a);
+   printf("Lane %d, s %f, d %f, v %f, a %f \n", lane, s, d, v, a);
  }
 };
 
