@@ -39,6 +39,10 @@ public:
   double get_d() const;
   double get_s() const;
 
+  void set_s(double s) {
+    start_state_[0] = s;
+  }
+
 private:
   VectorXd start_state_;
 
