@@ -296,6 +296,10 @@ int UdacityCode() {
               //The data format for each car is: [ id, x, y, vx, vy, s, d]
               vector<vector<double>> sensor_fusion = j[1]["sensor_fusion"];
 
+              if (previous_path_x.size() > 0) {
+                car_s = end_path_s;
+              }
+
               bool is_too_close = false;
               for (int i = 0; i < sensor_fusion.size(); ++i) {
                 //d-coordinate is at index 6
