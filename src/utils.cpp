@@ -168,6 +168,79 @@ void Utils::plot_trajectory(const Trajectory &trajectory, const Vehicle &vehicle
 //  plt::show();
 }
 
+vector<vector<double> > Utils::get_trajectory_points(const Trajectory &trajectory, int points_count) {
+  //vectors to hold (s, d) values for given trajectory
+  vector<double> trajectory_s_values;
+  vector<double> trajectory_d_values;
+
+  //vectors to hold (s, d) values for given vehicle
+  vector<double> vehicle_s_values;
+  vector<double> vehicle_d_values;
+
+  int count = 0;
+  //for each timestep of 0.25 till total time/duration of trajectory.t
+  double t = 0;
+  while (t <= trajectory.t + 0.01) {
+    //use trajectory s_coefficients to solve polynomial function of time at time t
+    //to get the value of s-coordinate at timestep t
+    double trajectory_s = solve_polynomial(trajectory.s_coeffs, t);
+    //similary for d-coordinate
+    double trajectory_d = solve_polynomial(trajectory.d_coeffs, t);
+
+    //append these values to list of (s, d) values
+    trajectory_s_values.push_back(trajectory_s);
+    trajectory_d_values.push_back(trajectory_d);
+
+    //increment time
+    t += 0.25;
+    count += 1;
+
+    if (count >= points_count) {
+      break;
+    }
+  }
+
+  vector<vector<double> > pts;
+  pts.push_back(trajectory_s_values);
+  pts.push_back(trajectory_d_values);
+
+  return pts;
+}
+
+int get_lane(double d) {
+  if (d >= 0 && d <= 4) {
+    return 0;
+  } else if (d > 4 && d <= 8) {
+    return 1;
+  } else if (d > 8 && d <= 12) {
+    return 2;
+  }
+}
+
+int Utils::find_nearest_vehicle_ahead(const vector<Vehicle> &vehicles, double s, double d) {
+  int nearest_distance = 999999;
+  int index = -1;
+  for (int i = 0; i < vehicles.size(); ++i) {
+    //check if in same lane and ahead of given s
+    if (get_lane(vehicles[i].get_d()) == get_lane(d) && vehicles[i].get_s() > s) {
+      double distance = vehicles[i].get_s() - s;
+
+      if (distance < nearest_distance) {
+        nearest_distance = distance;
+        index = i;
+      }
+    }
+  }
+
+  return index;
+}
+
+double Utils::get_d_value_for_lane_center(int lane) {
+  //as car drives in center so add 2m for to count current lane
+  //and as each lane is 4m so multiply by 4 to count other lanes before on left
+  return 2 + lane * 4;
+}
+
 
 
 

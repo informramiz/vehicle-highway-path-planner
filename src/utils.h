@@ -22,6 +22,11 @@ public:
   Utils();
   virtual ~Utils();
 
+
+  static int find_nearest_vehicle_ahead(const vector<Vehicle> &vehicles, double s, double d);
+  static double get_d_value_for_lane_center(int lane);
+  static vector<vector<double> > get_trajectory_points(const Trajectory &trajectory, int points_count);
+
   /**
    * Method to print a 2D vector. Vector type can be either primitive or
    * a custom type that has overloaded stream insertion operator (<<).
