@@ -24,10 +24,12 @@ public:
 
   double CalculateCost(const Vehicle &ego_vehicle,
                        const vector<Vehicle> &vehicles,
-                       const Trajectory &trajectory);
+                       const Trajectory &trajectory,
+                       const int previous_path_size);
   double CollisionCost(const Vehicle &ego_vehicle,
                        const vector<Vehicle> &vehicles,
-                       const Trajectory &trajectory);
+                       const Trajectory &trajectory,
+                       const int previous_path_size);
 
 private:
   double FindMinimumDistanceToVehicle(const vector<Vehicle> &vehicles,
@@ -42,7 +44,8 @@ private:
   //define a typdef for function pointer
   typedef double (CostFunctions::*cost_function_ptr)(
       const Vehicle &ego_vehicle, const vector<Vehicle> &vehicles,
-      const Trajectory &trajectory);
+      const Trajectory &trajectory,
+      const int previous_path_size);
 
   const vector<cost_function_ptr> cost_functions_ = {
       &CostFunctions::CollisionCost,

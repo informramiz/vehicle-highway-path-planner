@@ -19,13 +19,14 @@ CostFunctions::CostFunctions() {
 
 double CostFunctions::CalculateCost(const Vehicle &ego_vehicle,
                        const vector<Vehicle> &vehicles,
-                       const Trajectory &trajectory) {
+                       const Trajectory &trajectory,
+                       const int previous_path_size) {
   double total_cost = 0.0;
 
   for (int i = 0; i < cost_functions_.size(); ++i) {
-    double cost = cost_functions_weights_[i] * (this->*cost_functions_[i])(ego_vehicle, vehicles, trajectory);
+    double cost = cost_functions_weights_[i] * (this->*cost_functions_[i])(ego_vehicle, vehicles, trajectory, previous_path_size);
     if (cost > 0) {
-      printf("Cost for function %s: %f", this->cost_functions_names[i].c_str(), cost);
+      printf("Cost for function %s: %f\n", this->cost_functions_names[i].c_str(), cost);
     }
     total_cost += cost;
   }
@@ -35,7 +36,18 @@ double CostFunctions::CalculateCost(const Vehicle &ego_vehicle,
 
 double CostFunctions::CollisionCost(const Vehicle &ego_vehicle,
                      const vector<Vehicle> &vehicles,
-                     const Trajectory &trajectory) {
+                     const Trajectory &trajectory,
+                     const int previous_path_size) {
+
+  //for each point in trajectory predict where other vehicle
+  //will be at that point in time to see if there is a collision
+  const int num_timesteps = trajectory.x_values.size();
+  double timestep = 0.02; //each point is 0.02 (20 ms) timesteps away from other
+
+  //ignore previous path points as we are assuming ego vehicle
+  //is already at the end of that path
+  int start_point = previous_path_size > 0 ? previous_path_size - 1 : 0;
+  cout << "start point: " << start_point << endl;
 
   //get first point as it will be from previous path
   //we will use it for angle calculation which is
@@ -43,12 +55,7 @@ double CostFunctions::CollisionCost(const Vehicle &ego_vehicle,
   double prev_x = trajectory.x_values[0];
   double prev_y = trajectory.y_values[0];
 
-  //for each point in trajectory predict where other vehicle
-  //will be at that point in time to see if there is a collision
-  const int num_timesteps = trajectory.x_values.size();
-  double timestep = 0.02; //each point is 0.02 (20 ms) timesteps away from other
-
-  for (int i = 0; i < num_timesteps; ++i) {
+  for (int i = 1; i < num_timesteps; ++i) {
     double next_x = trajectory.x_values[i];
     double next_y = trajectory.y_values[i];
 
@@ -59,10 +66,10 @@ double CostFunctions::CollisionCost(const Vehicle &ego_vehicle,
     //convert current trajectory point to Frenet coordinate system
     vector<double> sd = MapUtils::getFrenet(next_x, next_y, yaw);
     //calculate time at this point in trajectory
-    double delta_t = i * timestep;
+    double delta_t = (i) * timestep;
 
     double nearest_approach = FindMinimumDistanceToVehicle(vehicles, sd[0], sd[1], delta_t);
-    if (nearest_approach < 2*VEHICLE_RADIUS) {
+    if (nearest_approach < BUFFER_DISTANCE) {
       return 1.0;
     }
 
