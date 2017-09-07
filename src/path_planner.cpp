@@ -163,21 +163,7 @@ Trajectory PathPlanner::GenerateTrajectory(const Vehicle &ego_vehicle,
   return trajectory;
 }
 
-vector<Trajectory> PathPlanner::GeneratePossibleTrajectories() {
-  //filter out valid lanes to go to
-  vector<int> valid_lanes = {lane_};
-  if (lane_ == 0) {
-    //we only want to change one lane at a time
-    valid_lanes.push_back(1);
-  } else if (lane_ == 2) {
-    //we only want to change one lane at a time
-    valid_lanes.push_back(1);
-  } else if (lane_ == 1) {
-    //we can either go left lane or right lane
-    valid_lanes.push_back(0);
-    valid_lanes.push_back(2);
-  }
-
+vector<Trajectory> PathPlanner::GeneratePossibleTrajectories(const vector<int> &valid_lanes) {
   //find trajectories for valid lanes
   vector<Trajectory> trajectories;
 
@@ -195,9 +181,30 @@ vector<Trajectory> PathPlanner::GeneratePossibleTrajectories() {
   return trajectories;
 }
 
+vector<int> PathPlanner::GetPossibleLanesToGo() {
+  //filter out valid lanes to go to
+  vector<int> valid_lanes = { lane_ };
+  if (lane_ == 0) {
+    //we only want to change one lane at a time
+    valid_lanes.push_back(1);
+  } else if (lane_ == 2) {
+    //we only want to change one lane at a time
+    valid_lanes.push_back(1);
+  } else if (lane_ == 1) {
+    //we can either go left lane or right lane
+    valid_lanes.push_back(0);
+    valid_lanes.push_back(2);
+  }
+
+  return valid_lanes;
+}
+
 Trajectory PathPlanner::FindBestTrajectory() {
+
+  //filter out valid lanes to go to
+  vector<int> valid_lanes = GetPossibleLanesToGo();
   //find possible lanes to go on
-  vector<Trajectory> possible_trajectories  = GeneratePossibleTrajectories();
+  vector<Trajectory> possible_trajectories  = GeneratePossibleTrajectories(valid_lanes);
 
   //now find min cost trajectory out of these possible trajectories
   int best_trajectory_index = -1;
@@ -213,6 +220,7 @@ Trajectory PathPlanner::FindBestTrajectory() {
     }
   }
 
+  this->lane_ = valid_lanes[best_trajectory_index];
   return possible_trajectories[best_trajectory_index];
 }
 

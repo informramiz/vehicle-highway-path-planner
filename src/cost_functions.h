@@ -30,6 +30,10 @@ public:
                        const vector<Vehicle> &vehicles,
                        const Trajectory &trajectory,
                        const int previous_path_size);
+  double BufferCost(const Vehicle &ego_vehicle,
+                    const vector<Vehicle> &vehicles,
+                    const Trajectory &trajectory,
+                    const int previous_path_size);
 
 private:
   double FindMinimumDistanceToVehicle(const vector<Vehicle> &vehicles,
@@ -37,7 +41,7 @@ private:
                                       const double d,
                                       double delta_t);
 
-  const double BUFFER_DISTANCE = 30;
+  const double BUFFER_DISTANCE = 50;
   const double GOAL_S = 6945.554;
   const double VEHICLE_RADIUS = 1.5;
 
@@ -46,16 +50,25 @@ private:
       const Vehicle &ego_vehicle, const vector<Vehicle> &vehicles,
       const Trajectory &trajectory,
       const int previous_path_size);
+  double FindNearestApproachDuringTrajectory(
+      const std::__1::vector<Vehicle>& vehicles, const Trajectory& trajectory,
+      const int previous_path_size);
 
   const vector<cost_function_ptr> cost_functions_ = {
       &CostFunctions::CollisionCost,
+      &CostFunctions::BufferCost,
   };
 
   //weight for each cost function
-  const vector<double> cost_functions_weights_ = { 20, //CollisionCost
-      };
+  const vector<double> cost_functions_weights_ = {
+      20, //CollisionCost
+      15, //BufferCost
+  };
 
-  const vector<string> cost_functions_names = { "CollisionCost", };
+  const vector<string> cost_functions_names = {
+      "CollisionCost",
+      "BufferCost",
+  };
 };
 
 #endif /* COST_FUNCTIONS_H_ */
