@@ -56,22 +56,19 @@ vector<Vehicle> PathPlanner::ExtractSensorFusionData(const vector<vector<double>
   return vehicles;
 }
 
-void PathPlanner::UpdateEgoVehicleStateWithRespectToPreviousPath(const vector<double> &previous_path_x,
-                                                                 const vector<double> &previous_path_y,
-                                                                 const double previous_path_last_s,
-                                                                 const double previous_path_last_d) {
+void PathPlanner::UpdateEgoVehicleStateWithRespectToPreviousPath() {
   //previous path is not empty that means simulator has
   //not traversed it yet and car is still in somewhere on that path
   //we have to provide new path so start from previous path end
   //hence previous path end point will become the new reference point to start
-  int prev_path_size = previous_path_x.size();
+  int prev_path_size = previous_path_x_.size();
 
   if (prev_path_size > 2) {
-    ego_vehicle_.s = previous_path_last_s;
-    ego_vehicle_.d = previous_path_last_d;
+    ego_vehicle_.s = previous_path_last_s_;
+    ego_vehicle_.d = previous_path_last_d_;
 
-    ego_vehicle_.x = previous_path_x[prev_path_size - 1];
-    ego_vehicle_.y = previous_path_y[prev_path_size - 1];
+    ego_vehicle_.x = previous_path_x_[prev_path_size - 1];
+    ego_vehicle_.y = previous_path_y_[prev_path_size - 1];
 
     //we need to calculate ref_yaw because provided ego_vehicle_.yaw is of
     //where the vehicle is right now (which is somewhere before previous_path end)
@@ -79,8 +76,8 @@ void PathPlanner::UpdateEgoVehicleStateWithRespectToPreviousPath(const vector<do
     //at the end of previous path
     //Angle is tangent between last and second
     //last point of the previous path so get the second last point
-    double prev_x = previous_path_x[prev_path_size - 2];
-    double prev_y = previous_path_y[prev_path_size - 2];
+    double prev_x = previous_path_x_[prev_path_size - 2];
+    double prev_y = previous_path_y_[prev_path_size - 2];
 
     //calculate tangent
     ego_vehicle_.yaw = atan2(ego_vehicle_.y - prev_y, ego_vehicle_.x - prev_x);
@@ -129,13 +126,17 @@ Trajectory PathPlanner::GenerateTrajectory(const Vehicle &ego_vehicle,
                                            const double previous_path_last_s,
                                            const double previous_path_last_d) {
   this->ego_vehicle_ = ego_vehicle;
+  this->previous_path_x_ = previous_path_x;
+  this->previous_path_y_ = previous_path_y;
+  this->previous_path_last_s_ = previous_path_last_s;
+  this->previous_path_last_d_ = previous_path_last_d;
+
   this->vehicles_ = ExtractSensorFusionData(sensor_fusion_data, previous_path_x.size());
 
   //we need to consider whether Simulator has traversed previous path
   //completely or some points till left. This will affect ego vehicle
   //state as well as new path so let's update ego vehicle state accordingly
-  UpdateEgoVehicleStateWithRespectToPreviousPath(previous_path_x, previous_path_y,
-                                                 previous_path_last_s, previous_path_last_d);
+  UpdateEgoVehicleStateWithRespectToPreviousPath();
 
   bool is_too_close_to_leading_vehicle = IsTooCloseToVehicleAhead();
 
@@ -152,9 +153,11 @@ Trajectory PathPlanner::GenerateTrajectory(const Vehicle &ego_vehicle,
     this->reference_velocity_ += 0.224;
   }
 
-  TrajectoryGenerator trajectory_generator;
-  return trajectory_generator.GenerateTrajectory(ego_vehicle_, previous_path_x, previous_path_y, previous_path_last_s,
+  Trajectory trajectory = trajectory_generator_.GenerateTrajectory(ego_vehicle_, previous_path_x, previous_path_y, previous_path_last_s,
       previous_path_last_d, lane_, reference_velocity_);
+
+  return trajectory;
+}
 }
 
 

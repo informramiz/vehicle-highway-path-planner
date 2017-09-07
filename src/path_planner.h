@@ -33,15 +33,20 @@ public:
 
 private:
   vector<Vehicle> ExtractSensorFusionData(const vector<vector<double> > &sensor_fusion_data, const int previous_path_size);
-  void UpdateEgoVehicleStateWithRespectToPreviousPath(const vector<double> &previous_path_x,
-                                                      const vector<double> &previous_path_y,
-                                                      const double previous_path_last_s,
-                                                      const double previous_path_last_d);
+  void UpdateEgoVehicleStateWithRespectToPreviousPath();
+  Trajectory FindBestTrajectory();
+
   double FindDistanceFromVehicleAhead();
   bool IsTooCloseToVehicleAhead();
+  TrajectoryGenerator trajectory_generator_;
 
   vector<Vehicle> vehicles_;
   Vehicle ego_vehicle_;
+  vector<double> previous_path_x_;
+  vector<double> previous_path_y_;
+  double previous_path_last_s_;
+  double previous_path_last_d_;
+
   int lane_;
   double reference_velocity_;
 
