@@ -30,8 +30,14 @@ public:
                        const Trajectory &trajectory);
 
 private:
+  double FindMinimumDistanceToVehicle(const vector<Vehicle> &vehicles,
+                                      const double s,
+                                      const double d,
+                                      double delta_t);
+
   const double BUFFER_DISTANCE = 30;
   const double GOAL_S = 6945.554;
+  const double VEHICLE_RADIUS = 1.5;
 
   //define a typdef for function pointer
   typedef double (CostFunctions::*cost_function_ptr)(
