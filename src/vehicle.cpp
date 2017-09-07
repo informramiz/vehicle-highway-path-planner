@@ -90,7 +90,7 @@ void Vehicle::increment(double dt) {
   this->v += this->a * dt;
 }
 
-vector<double> Vehicle::state_at(double t) {
+vector<double> Vehicle::state_at(double t) const {
 
   /*
    Predicts state of vehicle in t seconds (assuming constant acceleration)

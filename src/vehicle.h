@@ -60,7 +60,7 @@ public:
 
   void increment(double dt = 0.02);
 
-  vector<double> state_at(double t);
+  vector<double> state_at(double t) const;
 
   vector<vector<double> > generate_predictions(double horizon=1);
 
