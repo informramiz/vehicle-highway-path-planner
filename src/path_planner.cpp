@@ -91,15 +91,17 @@ PathPlanner::~PathPlanner() {
 }
 
 double PathPlanner::FindDistanceFromVehicleAhead() {
-  int ego_vehicle_lane = MapUtils::GetLane(ego_vehicle_.d);
+//  int ego_vehicle_lane = MapUtils::GetLane(ego_vehicle_.d);
+  double min_distance = 999999;
 
   for (int i = 0; i < vehicles_.size(); ++i) {
-    int vehicle_lane = MapUtils::GetLane(vehicles_[i].d);
+    int vehicle_lane = vehicles_[i].lane;
     double s = vehicles_[i].s;
     //discard this iteration if vehicle is not in ego_vehicle's lane
     //and is not leading vehicle
-    if (vehicle_lane != ego_vehicle_lane
-        || s < ego_vehicle_.s) {
+
+    if (vehicle_lane != this->lane_
+        || s <= ego_vehicle_.s) {
       //we are only interested in leading vehicles in same lane
       continue;
     }
@@ -107,10 +109,12 @@ double PathPlanner::FindDistanceFromVehicleAhead() {
     //vehicle is leading vehicle and in same lane as ego vehicle
     //check distance to leading vehicle
     double distance = s - ego_vehicle_.s;
-    return distance;
+    if (distance < min_distance) {
+      min_distance = distance;
+    }
   }
 
-  return 100;
+  return min_distance;
 }
 
 bool PathPlanner::IsTooCloseToVehicleAhead() {
@@ -123,7 +127,6 @@ Trajectory PathPlanner::GenerateTrajectory(const Vehicle &ego_vehicle,
                                            const vector<double> &previous_path_y,
                                            const double previous_path_last_s,
                                            const double previous_path_last_d) {
-
   this->ego_vehicle_ = ego_vehicle;
   this->vehicles_ = ExtractSensorFusionData(sensor_fusion_data, previous_path_x.size());
 
@@ -132,7 +135,7 @@ Trajectory PathPlanner::GenerateTrajectory(const Vehicle &ego_vehicle,
   //state as well as new path so let's update ego vehicle state accordingly
   UpdateEgoVehicleStateWithRespectToPreviousPath(previous_path_x, previous_path_y,
                                                  previous_path_last_s, previous_path_last_d);
-  this->lane_ = MapUtils::GetLane(ego_vehicle.d);
+
   bool is_too_close_to_leading_vehicle = IsTooCloseToVehicleAhead();
 
   if (is_too_close_to_leading_vehicle) {
