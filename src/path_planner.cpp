@@ -145,7 +145,7 @@ Trajectory PathPlanner::GenerateTrajectory(const Vehicle &ego_vehicle,
     this->reference_velocity_ -= 0.224;
 
     //also consider changing lanes
-    this->lane_ = (this->lane_ + 1) % 3;
+    //    this->lane_ = (this->lane_ + 1) % 3;
   } else if (reference_velocity_ < SPEED_LIMIT) {
     //we have less than desired speed and
     //are more than buffer distance from leading vehicle
@@ -153,11 +153,67 @@ Trajectory PathPlanner::GenerateTrajectory(const Vehicle &ego_vehicle,
     this->reference_velocity_ += 0.224;
   }
 
-  Trajectory trajectory = trajectory_generator_.GenerateTrajectory(ego_vehicle_, previous_path_x, previous_path_y, previous_path_last_s,
-      previous_path_last_d, lane_, reference_velocity_);
 
+  //stay in current lane
+  //  Trajectory trajectory = trajectory_generator_.GenerateTrajectory(ego_vehicle_, previous_path_x, previous_path_y, previous_path_last_s,
+  //        previous_path_last_d, lane_, reference_velocity_);
+  //
+  //    return trajectory;
+  Trajectory trajectory = FindBestTrajectory();
   return trajectory;
 }
+
+vector<Trajectory> PathPlanner::GeneratePossibleTrajectories() {
+  //filter out valid lanes to go to
+  vector<int> valid_lanes = {lane_};
+  if (lane_ == 0) {
+    //we only want to change one lane at a time
+    valid_lanes.push_back(1);
+  } else if (lane_ == 2) {
+    //we only want to change one lane at a time
+    valid_lanes.push_back(1);
+  } else if (lane_ == 1) {
+    //we can either go left lane or right lane
+    valid_lanes.push_back(0);
+    valid_lanes.push_back(2);
+  }
+
+  //find trajectories for valid lanes
+  vector<Trajectory> trajectories;
+
+  const int lanes_count = valid_lanes.size();
+  for (int i = 0; i < lanes_count; ++i) {
+    int proposed_lane = valid_lanes[i];
+
+    //generate trajectory for this lane
+    Trajectory trajectory = trajectory_generator_.GenerateTrajectory(
+        ego_vehicle_, previous_path_x_, previous_path_y_, previous_path_last_s_,
+        previous_path_last_d_, proposed_lane, reference_velocity_);
+    trajectories.push_back(trajectory);
+  }
+
+  return trajectories;
+}
+
+Trajectory PathPlanner::FindBestTrajectory() {
+  //find possible lanes to go on
+  vector<Trajectory> possible_trajectories  = GeneratePossibleTrajectories();
+
+  //now find min cost trajectory out of these possible trajectories
+  int best_trajectory_index = -1;
+  double min_cost = 999999;
+
+  const int trajectories_count = possible_trajectories.size();
+  for (int i = 0; i < trajectories_count; ++i) {
+    double cost = cost_functions_.CalculateCost(ego_vehicle_, vehicles_, possible_trajectories[i], previous_path_x_.size());
+
+    if (cost < min_cost) {
+      min_cost = cost;
+      best_trajectory_index = i;
+    }
+  }
+
+  return possible_trajectories[best_trajectory_index];
 }
 
 

@@ -13,6 +13,7 @@
 #include "vehicle.h"
 #include "trajectory_generator.h"
 #include "trajectory.h"
+#include "cost_functions.h"
 
 using namespace std;
 
@@ -38,7 +39,10 @@ private:
 
   double FindDistanceFromVehicleAhead();
   bool IsTooCloseToVehicleAhead();
+  vector<Trajectory> GeneratePossibleTrajectories();
+
   TrajectoryGenerator trajectory_generator_;
+  CostFunctions cost_functions_;
 
   vector<Vehicle> vehicles_;
   Vehicle ego_vehicle_;
@@ -50,6 +54,7 @@ private:
   int lane_;
   double reference_velocity_;
 
+  const vector<int> possible_lanes_ = {0, 1, 2};
   const double BUFFER_DISTANCE = 30;
   const double SPEED_LIMIT = 49.5;
   // The max s value before wrapping around the track back to 0
