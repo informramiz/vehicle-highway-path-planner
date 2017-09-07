@@ -37,21 +37,18 @@ Trajectory TrajectoryGenerator::GenerateTrajectory(const Vehicle &ego_vehicle,
   double ref_s = ego_vehicle.s;
   double ref_d = ego_vehicle.d;
 
-  //previous path is not empty that means simulator has
-  //not traversed it yet and car is still in somewhere on that path
-  //we have to provide new path so start from previous path end
-  //hence previous path end point will become the new reference point to start
-  if (prev_path_size > 0) {
-    ref_s = prev_path_last_s;
-    ref_d = prev_path_last_d;
-  }
-
   //make vectors of temporary points first
   //from which we will extrapolate actual points
   vector<double> points_x;
   vector<double> points_y;
 
+  //To make transition smooth from previous path we
+  //will add 2 points from previous path as well.
+  //first check if vehicle just started moving
   if (prev_path_size < 2) {
+    //vehicle just started movig so use current point
+    //and predict previous point
+
     //predict x,y before ref_x, ref_y
     //as delta_t = 1 so
     double prev_x = ref_x - cos(ref_yaw);
@@ -64,20 +61,15 @@ Trajectory TrajectoryGenerator::GenerateTrajectory(const Vehicle &ego_vehicle,
     points_x.push_back(ref_x);
     points_y.push_back(ref_y);
   } else {
-    //previous path is not empty that means simulator has
-    //not traversed it yet and car is still in somewhere on that path
-    //we have to provide new path so start from previous path end
-    //hence previous path end point will become the new reference point to start
-    ref_x = prev_path_x[prev_path_size-1];
-    ref_y = prev_path_y[prev_path_size-1];
-
-    //we need to calculate ref_yaw which is tangent between last and second
-    //last point of the previous path so get the second last point
+    //get second last point of previous path.
+    //Why SECOND LAST point? Because PathPlanner makes sure
+    //that the ego_vehicle object we received has reference x update
+    //to be at the end of previous path so as ego_vehicle is already
+    //at the end point of previous path so we should instead get second
+    //last point to make a smooth connection between second last
+    //and last point of the previous path
     double x_before_ref_x = prev_path_x[prev_path_size-2];
     double y_before_ref_y = prev_path_y[prev_path_size-2];
-
-    //now take tangent
-    ref_yaw = atan2(ref_y - y_before_ref_y, ref_x - x_before_ref_x);
 
     //add these 2 points to list of points as well
     points_x.push_back(x_before_ref_x);
