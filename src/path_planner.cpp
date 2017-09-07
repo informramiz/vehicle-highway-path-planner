@@ -48,7 +48,7 @@ vector<Vehicle> PathPlanner::ExtractSensorFusionData(const vector<vector<double>
     //we should predict its s-coordinate like if
     //we previous path was already traversed
     //REMEMBER: 1 timestep = 0.02 secs (or 20ms)
-    vehicle.increment(0.02 * previous_path_size);
+    //    vehicle.increment(0.02 * previous_path_size);
 
     vehicles.push_back(vehicle);
   }
@@ -89,12 +89,12 @@ PathPlanner::~PathPlanner() {
 }
 
 double PathPlanner::FindDistanceFromVehicleAhead() {
-//  int ego_vehicle_lane = MapUtils::GetLane(ego_vehicle_.d);
+  //  int ego_vehicle_lane = MapUtils::GetLane(ego_vehicle_.d);
   double min_distance = 999999;
 
   for (int i = 0; i < vehicles_.size(); ++i) {
     int vehicle_lane = vehicles_[i].lane;
-    double s = vehicles_[i].s;
+    double s = vehicles_[i].state_at(previous_path_x_.size() * 0.02)[1];
     //discard this iteration if vehicle is not in ego_vehicle's lane
     //and is not leading vehicle
 
