@@ -39,6 +39,8 @@ vector<Vehicle> PathPlanner::ExtractSensorFusionData(const vector<vector<double>
     //calculate total velocity
     double total_v = sqrt(vx*vx + vy*vy);
 
+    Vehicle vehicle(id, x, y, s, d, 0, total_v, 0);
+
     //if previous_path size is not 0 that means
     //the Simulator has not yet traversed complete prev path and
     //the vehicle is not in perspective with the
@@ -46,10 +48,9 @@ vector<Vehicle> PathPlanner::ExtractSensorFusionData(const vector<vector<double>
     //we should predict its s-coordinate like if
     //we previous path was already traversed
     //REMEMBER: 1 timestep = 0.02 secs (or 20ms)
-    double predicted_s = s + 0.02 * total_v * previous_path_size;
+    vehicle.increment(0.02 * previous_path_size);
 
-    Vehicle v(id, x, y, predicted_s, d, 0, total_v, 0);
-    vehicles.push_back(v);
+    vehicles.push_back(vehicle);
   }
 
   return vehicles;
