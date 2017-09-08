@@ -19,7 +19,7 @@ public:
   TrajectoryGenerator();
   virtual ~TrajectoryGenerator();
 
-  static Trajectory GenerateTrajectory(const Vehicle &ego_vehicle,
+  static CartesianTrajectory GenerateTrajectory(const Vehicle &ego_vehicle,
                                        const vector<double> &prev_path_x,
                                        const vector<double> &prev_path_y,
                                        double prev_path_last_s,

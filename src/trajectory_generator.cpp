@@ -20,7 +20,7 @@ TrajectoryGenerator::~TrajectoryGenerator() {
   // TODO Auto-generated destructor stub
 }
 
-Trajectory TrajectoryGenerator::GenerateTrajectory(const Vehicle &ego_vehicle,
+CartesianTrajectory TrajectoryGenerator::GenerateTrajectory(const Vehicle &ego_vehicle,
                                      const vector<double> &prev_path_x,
                                      const vector<double> &prev_path_y,
                                      double prev_path_last_s,
@@ -180,6 +180,6 @@ Trajectory TrajectoryGenerator::GenerateTrajectory(const Vehicle &ego_vehicle,
     next_y_vals.push_back(y);
   }
 
-  return Trajectory(next_x_vals, next_y_vals);
+  return CartesianTrajectory(next_x_vals, next_y_vals);
 }
 

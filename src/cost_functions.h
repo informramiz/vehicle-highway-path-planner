@@ -24,22 +24,25 @@ public:
 
   double CalculateCost(const Vehicle &ego_vehicle,
                        const vector<Vehicle> &vehicles,
-                       const Trajectory &trajectory,
+                       const CartesianTrajectory &trajectory,
                        const int previous_path_size);
   double CollisionCost(const Vehicle &ego_vehicle,
                        const vector<Vehicle> &vehicles,
-                       const Trajectory &trajectory,
+                       const CartesianTrajectory &trajectory,
                        const int previous_path_size);
   double BufferCost(const Vehicle &ego_vehicle,
                     const vector<Vehicle> &vehicles,
-                    const Trajectory &trajectory,
+                    const CartesianTrajectory &trajectory,
+                    const int previous_path_size);
+
                     const int previous_path_size);
 
 private:
   double FindMinimumDistanceToVehicle(const vector<Vehicle> &vehicles,
                                       const double s,
                                       const double d,
-                                      double delta_t);
+                                      double delta_t,
+                                      bool consider_only_leading_vehicles);
 
   const double BUFFER_DISTANCE = 50;
   const double GOAL_S = 6945.554;
@@ -48,11 +51,13 @@ private:
   //define a typdef for function pointer
   typedef double (CostFunctions::*cost_function_ptr)(
       const Vehicle &ego_vehicle, const vector<Vehicle> &vehicles,
-      const Trajectory &trajectory,
+      const CartesianTrajectory &trajectory,
       const int previous_path_size);
+
   double FindNearestApproachDuringTrajectory(
-      const std::__1::vector<Vehicle>& vehicles, const Trajectory& trajectory,
-      const int previous_path_size);
+      const vector<Vehicle>& vehicles, const CartesianTrajectory& trajectory,
+      const int previous_path_size,
+      bool consider_only_leading_vehicles);
 
   const vector<cost_function_ptr> cost_functions_ = {
       &CostFunctions::CollisionCost,
@@ -61,7 +66,7 @@ private:
 
   //weight for each cost function
   const vector<double> cost_functions_weights_ = {
-      20, //CollisionCost
+      40, //CollisionCost
       15, //BufferCost
   };
 

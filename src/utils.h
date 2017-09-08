@@ -24,7 +24,7 @@ public:
 
 
   static int find_nearest_vehicle_ahead(const vector<Vehicle> &vehicles, double s, double d);
-  static vector<vector<double> > get_trajectory_points(const Trajectory &trajectory, int points_count);
+  static vector<vector<double> > get_trajectory_points(const CartesianTrajectory &trajectory, int points_count);
 
 
   /**

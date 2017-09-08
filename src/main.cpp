@@ -41,6 +41,9 @@ int MyCode();
 
 int main() {
   MyCode();
+//  string map_file_ = "data/highway_map.csv";
+//  MapUtils::Initialize(map_file_);
+//  UdacityCode();
   return 0;
 }
 
@@ -461,7 +464,7 @@ int MyCode() {
           /***********Process Data****************/
 
           Vehicle ego_vehicle(-1, car_x, car_y, car_s, car_d, Utils::deg2rad(car_yaw), car_speed, 0);
-          Trajectory trajectory = path_planner.GenerateTrajectory(ego_vehicle, sensor_fusion, previous_path_x,
+          CartesianTrajectory trajectory = path_planner.GenerateTrajectory(ego_vehicle, sensor_fusion, previous_path_x,
               previous_path_y, end_path_s, end_path_d);
 
           /***************END Processing of data***************/

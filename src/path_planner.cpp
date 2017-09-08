@@ -119,7 +119,7 @@ bool PathPlanner::IsTooCloseToVehicleAhead() {
   return FindDistanceFromVehicleAhead() < BUFFER_DISTANCE;
 }
 
-Trajectory PathPlanner::GenerateTrajectory(const Vehicle &ego_vehicle,
+CartesianTrajectory PathPlanner::GenerateTrajectory(const Vehicle &ego_vehicle,
                                            const vector<vector<double> > &sensor_fusion_data,
                                            const vector<double> &previous_path_x,
                                            const vector<double> &previous_path_y,
@@ -159,20 +159,20 @@ Trajectory PathPlanner::GenerateTrajectory(const Vehicle &ego_vehicle,
   //        previous_path_last_d, lane_, reference_velocity_);
   //
   //    return trajectory;
-  Trajectory trajectory = FindBestTrajectory();
+  CartesianTrajectory trajectory = FindBestTrajectory();
   return trajectory;
 }
 
-vector<Trajectory> PathPlanner::GeneratePossibleTrajectories(const vector<int> &valid_lanes) {
+vector<CartesianTrajectory> PathPlanner::GeneratePossibleTrajectories(const vector<int> &valid_lanes) {
   //find trajectories for valid lanes
-  vector<Trajectory> trajectories;
+  vector<CartesianTrajectory> trajectories;
 
   const int lanes_count = valid_lanes.size();
   for (int i = 0; i < lanes_count; ++i) {
     int proposed_lane = valid_lanes[i];
 
     //generate trajectory for this lane
-    Trajectory trajectory = trajectory_generator_.GenerateTrajectory(
+    CartesianTrajectory trajectory = trajectory_generator_.GenerateTrajectory(
         ego_vehicle_, previous_path_x_, previous_path_y_, previous_path_last_s_,
         previous_path_last_d_, proposed_lane, reference_velocity_);
     trajectories.push_back(trajectory);
@@ -199,12 +199,12 @@ vector<int> PathPlanner::GetPossibleLanesToGo() {
   return valid_lanes;
 }
 
-Trajectory PathPlanner::FindBestTrajectory() {
+CartesianTrajectory PathPlanner::FindBestTrajectory() {
 
   //filter out valid lanes to go to
   vector<int> valid_lanes = GetPossibleLanesToGo();
   //find possible lanes to go on
-  vector<Trajectory> possible_trajectories  = GeneratePossibleTrajectories(valid_lanes);
+  vector<CartesianTrajectory> possible_trajectories  = GeneratePossibleTrajectories(valid_lanes);
 
   //now find min cost trajectory out of these possible trajectories
   int best_trajectory_index = -1;

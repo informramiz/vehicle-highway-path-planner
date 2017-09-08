@@ -25,7 +25,7 @@ public:
 
   // Sensor Fusion Data, a list of all other cars on the same side of the road.
   //The data format for each car is: [ id, x, y, vx, vy, s, d]
-  Trajectory GenerateTrajectory(const Vehicle &ego_vehicle,
+  CartesianTrajectory GenerateTrajectory(const Vehicle &ego_vehicle,
                                 const vector<vector<double> > &sensor_fusion_data,
                                 const vector<double> &previous_path_x,
                                 const vector<double> &previous_path_y,
@@ -35,11 +35,11 @@ public:
 private:
   vector<Vehicle> ExtractSensorFusionData(const vector<vector<double> > &sensor_fusion_data, const int previous_path_size);
   void UpdateEgoVehicleStateWithRespectToPreviousPath();
-  Trajectory FindBestTrajectory();
+  CartesianTrajectory FindBestTrajectory();
 
   double FindDistanceFromVehicleAhead();
   bool IsTooCloseToVehicleAhead();
-  vector<Trajectory> GeneratePossibleTrajectories(const vector<int> &valid_lanes);
+  vector<CartesianTrajectory> GeneratePossibleTrajectories(const vector<int> &valid_lanes);
   std::__1::vector<int> GetPossibleLanesToGo();
 
   TrajectoryGenerator trajectory_generator_;

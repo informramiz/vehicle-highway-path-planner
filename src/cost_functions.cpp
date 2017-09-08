@@ -19,7 +19,7 @@ CostFunctions::CostFunctions() {
 
 double CostFunctions::CalculateCost(const Vehicle &ego_vehicle,
                                     const vector<Vehicle> &vehicles,
-                                    const Trajectory &trajectory,
+                                    const CartesianTrajectory &trajectory,
                                     const int previous_path_size) {
   double total_cost = 0.0;
 
@@ -35,7 +35,7 @@ double CostFunctions::CalculateCost(const Vehicle &ego_vehicle,
 }
 
 double CostFunctions::FindNearestApproachDuringTrajectory(
-    const vector<Vehicle>& vehicles, const Trajectory& trajectory,
+    const vector<Vehicle>& vehicles, const CartesianTrajectory& trajectory,
     const int previous_path_size,
     bool consider_only_leading_vehicles) {
 
@@ -119,7 +119,7 @@ double CostFunctions::FindMinimumDistanceToVehicle(const vector<Vehicle> &vehicl
 
 double CostFunctions::CollisionCost(const Vehicle &ego_vehicle,
                                     const vector<Vehicle> &vehicles,
-                                    const Trajectory &trajectory,
+                                    const CartesianTrajectory &trajectory,
                                     const int previous_path_size) {
 
   //for each point in trajectory predict where other vehicle
@@ -136,7 +136,7 @@ double CostFunctions::CollisionCost(const Vehicle &ego_vehicle,
 
 double CostFunctions::BufferCost(const Vehicle &ego_vehicle,
                                  const vector<Vehicle> &vehicles,
-                                 const Trajectory &trajectory,
+                                 const CartesianTrajectory &trajectory,
                                  const int previous_path_size) {
   //for each point in trajectory predict where other vehicle
   //will be at that point in time to see if there is a collision
