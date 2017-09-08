@@ -25,15 +25,15 @@ public:
   double CalculateCost(const Vehicle &ego_vehicle,
                        const vector<Vehicle> &vehicles,
                        const CartesianTrajectory &trajectory,
-                       const int previous_path_size);
+                       const int current_lane);
   double CollisionCost(const Vehicle &ego_vehicle,
                        const vector<Vehicle> &vehicles,
                        const FrenetTrajectory &trajectory,
-                       const int previous_path_size);
+                       const int current_lane);
   double BufferCost(const Vehicle &ego_vehicle,
                     const vector<Vehicle> &vehicles,
                     const FrenetTrajectory &trajectory,
-                    const int previous_path_size);
+                    const int current_lane);
 
   double DistanceToGoalCost(const Vehicle &ego_vehicle,
                     const vector<Vehicle> &vehicles,
@@ -55,11 +55,10 @@ private:
   typedef double (CostFunctions::*cost_function_ptr)(
       const Vehicle &ego_vehicle, const vector<Vehicle> &vehicles,
       const FrenetTrajectory &trajectory,
-      const int previous_path_size);
+      const int current_lane);
 
   double FindNearestApproachDuringTrajectory(
       const vector<Vehicle>& vehicles, const FrenetTrajectory& trajectory,
-      const int previous_path_size,
       bool consider_only_leading_vehicles);
 
   const vector<cost_function_ptr> cost_functions_ = {

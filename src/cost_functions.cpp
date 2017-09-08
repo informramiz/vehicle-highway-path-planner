@@ -20,14 +20,14 @@ CostFunctions::CostFunctions() {
 double CostFunctions::CalculateCost(const Vehicle &ego_vehicle,
                                     const vector<Vehicle> &vehicles,
                                     const CartesianTrajectory &trajectory,
-                                    const int previous_path_size) {
+                                    const int current_lane) {
   //convert to FrenetTrajectory
   FrenetTrajectory frenet_trajectory = MapUtils::CartesianToFrenet(trajectory, ego_vehicle.yaw);
 
   double total_cost = 0.0;
 
   for (int i = 0; i < cost_functions_.size(); ++i) {
-    double cost = cost_functions_weights_[i] * (this->*cost_functions_[i])(ego_vehicle, vehicles, frenet_trajectory, previous_path_size);
+    double cost = cost_functions_weights_[i] * (this->*cost_functions_[i])(ego_vehicle, vehicles, frenet_trajectory, current_lane);
     if (cost > 0) {
       printf("Cost for function %s: %f\n", this->cost_functions_names[i].c_str(), cost);
     }
@@ -39,7 +39,6 @@ double CostFunctions::CalculateCost(const Vehicle &ego_vehicle,
 
 double CostFunctions::FindNearestApproachDuringTrajectory(const vector<Vehicle>& vehicles,
                                                           const FrenetTrajectory& trajectory,
-                                                          const int previous_path_size,
                                                           bool consider_only_leading_vehicles) {
 
   //for each point in trajectory predict where other vehicle
@@ -109,12 +108,12 @@ double CostFunctions::FindMinimumDistanceToVehicle(const vector<Vehicle> &vehicl
 double CostFunctions::CollisionCost(const Vehicle &ego_vehicle,
                                     const vector<Vehicle> &vehicles,
                                     const FrenetTrajectory &trajectory,
-                                    const int previous_path_size) {
+                                    const int current_lane) {
 
   //for each point in trajectory predict where other vehicle
   //will be at that point in time to see if there is a collision
   double nearest_approach = FindNearestApproachDuringTrajectory(vehicles,
-      trajectory, previous_path_size, false);
+      trajectory, false);
 
   if (nearest_approach < 10) {
     return 1.0;
@@ -126,11 +125,11 @@ double CostFunctions::CollisionCost(const Vehicle &ego_vehicle,
 double CostFunctions::BufferCost(const Vehicle &ego_vehicle,
                                  const vector<Vehicle> &vehicles,
                                  const FrenetTrajectory &trajectory,
-                                 const int previous_path_size) {
+                                 const int current_lane) {
   //for each point in trajectory predict where other vehicle
   //will be at that point in time to see if there is a collision
   double nearest_approach = FindNearestApproachDuringTrajectory(vehicles,
-      trajectory, previous_path_size, true);
+      trajectory, true);
 
 //  if (nearest_approach > BUFFER_DISTANCE) {
 //    return 0.0;
