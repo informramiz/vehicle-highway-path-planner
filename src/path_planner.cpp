@@ -91,6 +91,7 @@ PathPlanner::~PathPlanner() {
 double PathPlanner::FindDistanceFromVehicleAhead() {
   //  int ego_vehicle_lane = MapUtils::GetLane(ego_vehicle_.d);
   double min_distance = 999999;
+  double ego_vehicle_s = previous_path_x_.size() > 0 ? previous_path_last_s_: ego_vehicle_.s;
 
   for (int i = 0; i < vehicles_.size(); ++i) {
     int vehicle_lane = vehicles_[i].lane;
@@ -99,14 +100,14 @@ double PathPlanner::FindDistanceFromVehicleAhead() {
     //and is not leading vehicle
 
     if (vehicle_lane != this->lane_
-        || s <= ego_vehicle_.s) {
+        || s <= ego_vehicle_s) {
       //we are only interested in leading vehicles in same lane
       continue;
     }
 
     //vehicle is leading vehicle and in same lane as ego vehicle
     //check distance to leading vehicle
-    double distance = s - ego_vehicle_.s;
+    double distance = s - ego_vehicle_s;
     if (distance < min_distance) {
       min_distance = distance;
     }
@@ -136,7 +137,7 @@ CartesianTrajectory PathPlanner::GenerateTrajectory(const Vehicle &ego_vehicle,
   //we need to consider whether Simulator has traversed previous path
   //completely or some points till left. This will affect ego vehicle
   //state as well as new path so let's update ego vehicle state accordingly
-  UpdateEgoVehicleStateWithRespectToPreviousPath();
+//  UpdateEgoVehicleStateWithRespectToPreviousPath();
 
   bool is_too_close_to_leading_vehicle = IsTooCloseToVehicleAhead();
 
