@@ -146,7 +146,7 @@ CartesianTrajectory PathPlanner::GenerateTrajectory(const Vehicle &ego_vehicle,
     this->reference_velocity_ -= 0.224;
 
     //also consider changing lanes
-    //    this->lane_ = (this->lane_ + 1) % 3;
+//    this->lane_ = (this->lane_ + 1) % 3;
   } else if (reference_velocity_ < SPEED_LIMIT) {
     //we have less than desired speed and
     //are more than buffer distance from leading vehicle
@@ -155,13 +155,14 @@ CartesianTrajectory PathPlanner::GenerateTrajectory(const Vehicle &ego_vehicle,
   }
 
 
-  //stay in current lane
-  //  Trajectory trajectory = trajectory_generator_.GenerateTrajectory(ego_vehicle_, previous_path_x, previous_path_y, previous_path_last_s,
-  //        previous_path_last_d, lane_, reference_velocity_);
-  //
-  //    return trajectory;
+////  stay in current lane
+//   CartesianTrajectory trajectory = trajectory_generator_.GenerateTrajectory(ego_vehicle_, previous_path_x, previous_path_y, previous_path_last_s,
+//          previous_path_last_d, lane_, reference_velocity_);
+//
+//      return trajectory;
+
   CartesianTrajectory trajectory = FindBestTrajectory();
-  return trajectory;
+  return trajectory.ExtractTrajectory();
 }
 
 vector<CartesianTrajectory> PathPlanner::GeneratePossibleTrajectories(const vector<int> &valid_lanes) {
@@ -204,6 +205,8 @@ CartesianTrajectory PathPlanner::FindBestTrajectory() {
 
   //filter out valid lanes to go to
   vector<int> valid_lanes = GetPossibleLanesToGo();
+  cout << "\ncurrent lane is " << lane_ << " and next valid lanes are: " << endl;
+  Utils::print_vector(valid_lanes);
   //find possible lanes to go on
   vector<CartesianTrajectory> possible_trajectories  = GeneratePossibleTrajectories(valid_lanes);
 
@@ -214,6 +217,7 @@ CartesianTrajectory PathPlanner::FindBestTrajectory() {
   const int trajectories_count = possible_trajectories.size();
   for (int i = 0; i < trajectories_count; ++i) {
     double cost = cost_functions_.CalculateCost(ego_vehicle_, vehicles_, possible_trajectories[i], previous_path_x_.size());
+    printf("cost of lane %d is %f\n", valid_lanes[i], cost);
 
     if (cost < min_cost) {
       min_cost = cost;
@@ -221,6 +225,7 @@ CartesianTrajectory PathPlanner::FindBestTrajectory() {
     }
   }
 
+  printf("selected lane %d with cost %f\n", valid_lanes[best_trajectory_index], min_cost);
   this->lane_ = valid_lanes[best_trajectory_index];
   return possible_trajectories[best_trajectory_index];
 }
