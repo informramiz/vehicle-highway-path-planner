@@ -174,7 +174,7 @@ CartesianTrajectory TrajectoryGenerator::GenerateTrajectory(const Vehicle &ego_v
   //because we are in vehicle coordinates so (ref_x, ref_y) = (0, 0),
   //and will have `point_space` gap between them
   double start_x = 0;
-  for (int i = 1; i <= 250 - prev_path_size; ++i) {
+  for (int i = 1; i <= 100 - prev_path_size; ++i) {
     double x = start_x + (i * point_space);
     //get corresponding y-value on spline
     double y = spline(x);
