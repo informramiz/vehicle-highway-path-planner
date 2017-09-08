@@ -56,7 +56,7 @@ private:
   double reference_velocity_;
 
   const vector<int> possible_lanes_ = {0, 1, 2};
-  const double BUFFER_DISTANCE = 20;
+  const double BUFFER_DISTANCE = 30;
   const double SPEED_LIMIT = 49.5;
   // The max s value before wrapping around the track back to 0
   const double MAX_S = 6945.554;
