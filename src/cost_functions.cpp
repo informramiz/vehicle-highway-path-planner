@@ -138,9 +138,21 @@ double CostFunctions::BufferCost(const Vehicle &ego_vehicle,
   return Utils::logistic(2 * BUFFER_DISTANCE / nearest_approach);
 }
 
-double CostFunctions::DistanceToGoalCost(const Vehicle &ego_vehicle,
+double CostFunctions::ChangeLaneCost(const Vehicle &ego_vehicle,
                   const vector<Vehicle> &vehicles,
                   const FrenetTrajectory &trajectory,
-                  const int previous_path_size) {
-  return 0.0;
+                  const int current_lane) {
+  double start_d = trajectory.d_values[0];
+  int start_lane = MapUtils::GetLane(start_d);
+
+  double end_d = trajectory.d_values[trajectory.d_values.size()-1];
+  int end_lane = MapUtils::GetLane(end_d);
+
+  //we want to penalize lane change as it is not cheap
+  if (current_lane != end_lane) {
+    printf("start_lane, end_lane: %d, %d\n", start_lane, ego_vehicle.lane);
+    return 1.0;
+  }
+
+  return 0;
 }

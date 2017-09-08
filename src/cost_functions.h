@@ -35,10 +35,10 @@ public:
                     const FrenetTrajectory &trajectory,
                     const int current_lane);
 
-  double DistanceToGoalCost(const Vehicle &ego_vehicle,
+  double ChangeLaneCost(const Vehicle &ego_vehicle,
                     const vector<Vehicle> &vehicles,
                     const FrenetTrajectory &trajectory,
-                    const int previous_path_size);
+                    const int current_lane);
 
 private:
   double FindMinimumDistanceToVehicle(const vector<Vehicle> &vehicles,
@@ -64,20 +64,20 @@ private:
   const vector<cost_function_ptr> cost_functions_ = {
       &CostFunctions::CollisionCost,
       &CostFunctions::BufferCost,
-      &CostFunctions::DistanceToGoalCost,
+      &CostFunctions::ChangeLaneCost,
   };
 
   //weight for each cost function
   const vector<double> cost_functions_weights_ = {
       100, //CollisionCost
-      5, //DistanceToGoalCost
       20, //BufferCost
+      1, //ChangeLaneCost
   };
 
   const vector<string> cost_functions_names = {
       "CollisionCost",
       "BufferCost",
-      "DistanceToGoalCost",
+      "ChangeLaneCost",
   };
 };
 
