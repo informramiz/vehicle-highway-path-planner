@@ -27,6 +27,16 @@ struct CartesianTrajectory {
   }
 };
 
+struct FrenetTrajectory {
+  //Frenet coordinates
+  vector<double> s_values;
+  vector<double> d_values;
+
+  FrenetTrajectory(const vector<double> &s_values, const vector<double> &d_values) {
+    this->s_values = s_values;
+    this->d_values = d_values;
+  }
+};
 
 
 #endif /* TRAJECTORY_H_ */
