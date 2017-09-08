@@ -25,6 +25,13 @@ struct CartesianTrajectory {
     this->x_values = x_values;
     this->y_values = y_values;
   }
+
+  CartesianTrajectory ExtractTrajectory(int points_count=50) {
+    vector<double> new_x_values(this->x_values.begin(), this->x_values.begin() + points_count);
+    vector<double> new_y_values(this->y_values.begin(), this->y_values.begin() + points_count);
+
+    return CartesianTrajectory(new_x_values, new_y_values);
+  }
 };
 
 struct FrenetTrajectory {
@@ -35,6 +42,13 @@ struct FrenetTrajectory {
   FrenetTrajectory(const vector<double> &s_values, const vector<double> &d_values) {
     this->s_values = s_values;
     this->d_values = d_values;
+  }
+
+  FrenetTrajectory ExtractTrajectory(int points_count=50) {
+    vector<double> new_s_values(this->s_values.begin(), this->s_values.begin() + points_count);
+    vector<double> new_d_values(this->d_values.begin(), this->d_values.begin() + points_count);
+
+    return FrenetTrajectory(new_s_values, new_d_values);
   }
 };
 
