@@ -35,6 +35,9 @@ public:
                     const CartesianTrajectory &trajectory,
                     const int previous_path_size);
 
+  double DistanceToGoalCost(const Vehicle &ego_vehicle,
+                    const vector<Vehicle> &vehicles,
+                    const CartesianTrajectory &trajectory,
                     const int previous_path_size);
 
 private:
@@ -62,6 +65,7 @@ private:
   const vector<cost_function_ptr> cost_functions_ = {
       &CostFunctions::CollisionCost,
       &CostFunctions::BufferCost,
+      &CostFunctions::DistanceToGoalCost,
   };
 
   //weight for each cost function
@@ -74,6 +78,7 @@ private:
   const vector<string> cost_functions_names = {
       "CollisionCost",
       "BufferCost",
+      "DistanceToGoalCost",
   };
 };
 

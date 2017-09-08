@@ -149,3 +149,10 @@ double CostFunctions::BufferCost(const Vehicle &ego_vehicle,
 
   return Utils::logistic(2 * BUFFER_DISTANCE / nearest_approach);
 }
+
+double CostFunctions::DistanceToGoalCost(const Vehicle &ego_vehicle,
+                  const vector<Vehicle> &vehicles,
+                  const CartesianTrajectory &trajectory,
+                  const int previous_path_size) {
+
+}
