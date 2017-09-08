@@ -167,6 +167,61 @@ vector<double> MapUtils::getXY(double s, double d) {
 
 }
 
+FrenetTrajectory MapUtils::CartesianToFrenet(const CartesianTrajectory &cartesian_trajectory,
+                                                    const double ref_yaw) {
+
+  vector<double> s_values;
+  vector<double> d_values;
+
+  //get first point as it will be from previous path
+  //we will use it for angle calculation which is
+  //tangent line (slope) between two points
+  double prev_x = cartesian_trajectory.x_values[0];
+  double prev_y = cartesian_trajectory.y_values[0];
+
+  //convert this point to Frenet
+  vector<double> frenet = getFrenet(prev_x, prev_y, ref_yaw);
+  s_values.push_back(frenet[0]);
+  d_values.push_back(frenet[1]);
+
+  //for each point in trajectory predict where other vehicle
+  //will be at that point in time to see if there is a collision
+  const int num_timesteps = cartesian_trajectory.x_values.size();
+  for (int i = 1; i < num_timesteps; ++i) {
+    double next_x = cartesian_trajectory.x_values[i];
+    double next_y = cartesian_trajectory.y_values[i];
+
+    //calculate angle of vehicle at this point in time
+    //which is slope (tangent) between this and previous point
+    double yaw = atan2(next_y - prev_y, next_x - prev_x);
+    //convert current trajectory point to Frenet coordinate system
+    vector<double> sd = MapUtils::getFrenet(next_x, next_y, yaw);
+
+    s_values.push_back(sd[0]);
+    d_values.push_back(sd[1]);
+
+    prev_x = next_x;
+    prev_y = next_y;
+  }
+
+  return FrenetTrajectory(s_values, d_values);
+}
+
+CartesianTrajectory MapUtils::FrenetToCartesian(const FrenetTrajectory &frenet_trajectory) {
+  vector<double> x_values;
+  vector<double> y_values;
+
+  const int points_count = frenet_trajectory.s_values.size();
+  for (int i = 0; i < points_count; ++i) {
+    vector<double> xy = getXY(frenet_trajectory.s_values[i], frenet_trajectory.d_values[i]);
+
+    x_values.push_back(xy[0]);
+    y_values.push_back(xy[1]);
+  }
+
+  return CartesianTrajectory(x_values, y_values);
+}
+
 void MapUtils::CheckInitialization() {
   if (!is_initialized_) {
     cerr << "Map not initialized" << endl;

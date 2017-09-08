@@ -11,6 +11,7 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include "trajectory.h"
 
 using namespace std;
 
@@ -21,12 +22,15 @@ public:
   static int NextWaypoint(double x, double y, double theta);
   static vector<double> getFrenet(double x, double y, double theta);
   static vector<double> getXY(double s, double d);
+  static FrenetTrajectory CartesianToFrenet(const CartesianTrajectory &cartesian_trajectory, const double ref_yaw);
+  static CartesianTrajectory FrenetToCartesian(const FrenetTrajectory &frenet_trajectory);
 
   static void TransformToVehicleCoordinates(double ref_x, double ref_y, double ref_yaw, double &x, double &y);
   static void TransformFromVehicleToMapCoordinates(double ref_x, double ref_y, double ref_yaw, double &x, double &y);
   static int GetLane(double d);
   static double GetdValueForLaneCenter(int lane);
-private:
+
+public:
   static void CheckInitialization();
 
   static bool is_initialized_;
