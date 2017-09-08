@@ -131,9 +131,9 @@ double CostFunctions::BufferCost(const Vehicle &ego_vehicle,
   double nearest_approach = FindNearestApproachDuringTrajectory(vehicles,
       trajectory, true);
 
-//  if (nearest_approach > BUFFER_DISTANCE) {
-//    return 0.0;
-//  }
+  if (nearest_approach > BUFFER_DISTANCE) {
+    return 0.0;
+  }
 
   return Utils::logistic(2 * BUFFER_DISTANCE / nearest_approach);
 }
