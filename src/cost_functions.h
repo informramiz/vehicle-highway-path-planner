@@ -70,8 +70,8 @@ private:
   //weight for each cost function
   const vector<double> cost_functions_weights_ = {
       100, //CollisionCost
-      15, //BufferCost
       5, //DistanceToGoalCost
+      20, //BufferCost
   };
 
   const vector<string> cost_functions_names = {
