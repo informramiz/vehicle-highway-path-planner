@@ -28,7 +28,7 @@ double CostFunctions::CalculateCost(const Vehicle &ego_vehicle,
 
   for (int i = 0; i < cost_functions_.size(); ++i) {
     double cost = cost_functions_weights_[i] * (this->*cost_functions_[i])(ego_vehicle, vehicles, frenet_trajectory, current_lane);
-    if (cost != 0) {
+    if (cost != 0.0) {
       printf("Cost for function %s: %f\n", this->cost_functions_names[i].c_str(), cost);
     }
     total_cost += cost;
