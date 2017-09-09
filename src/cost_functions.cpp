@@ -49,8 +49,8 @@ vector<double> CostFunctions::FindNearestApproachDuringTrajectory(const vector<V
   double min_distance = 999999;
   int nearest_vehicle_index = -1;
   double min_distance_ego_vehicle_s = -1;
-  double time_of_appraoch = 0.0;
-
+  double time_of_appraoch = BUFFER_DISTANCE/ 0.02;
+  int timesteps = 0;
   for (int i = 0; i < num_timesteps; ++i) {
     double s = trajectory.s_values[i];
     double d = trajectory.d_values[i];
@@ -60,14 +60,16 @@ vector<double> CostFunctions::FindNearestApproachDuringTrajectory(const vector<V
     int vehicle_index = FindMinimumDistanceVehicleIndex(vehicles, s,
         trajectory.lane, delta_t, consider_only_leading_vehicles);
 
-    double distance = vehicle_index != -1 ? abs(vehicles[vehicle_index].s - s) : 999999;
+    double distance = vehicle_index != -1 ? abs(vehicles[vehicle_index].s - s) : 9999999;
     if (distance < min_distance) {
       min_distance = distance;
       nearest_vehicle_index = vehicle_index;
       min_distance_ego_vehicle_s = s;
       time_of_appraoch = delta_t;
+      timesteps = i;
     }
   }
+  printf("Found nearest approach %f at time %f and timesteps %d\n", min_distance, time_of_appraoch, timesteps);
   return {min_distance, min_distance_ego_vehicle_s, double(nearest_vehicle_index), time_of_appraoch};
 }
 
