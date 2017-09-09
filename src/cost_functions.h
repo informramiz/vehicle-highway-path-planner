@@ -47,8 +47,8 @@ private:
                                       double delta_t,
                                       bool consider_only_leading_vehicles);
 
-  const double COLLISION_DISTANCE = 10;
-  const double BUFFER_DISTANCE = 30;
+  const double COLLISION_DISTANCE = 5;
+  const double BUFFER_DISTANCE = 20;
   const double GOAL_S = 6945.554;
   const double VEHICLE_RADIUS = 1.5;
 
