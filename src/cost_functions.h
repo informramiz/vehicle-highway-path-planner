@@ -47,7 +47,7 @@ private:
                                       double delta_t,
                                       bool consider_only_leading_vehicles);
 
-  const double COLLISION_DISTANCE = 10;
+  const double COLLISION_DISTANCE = 15;
   const double BUFFER_DISTANCE = 30;
   const double GOAL_S = 6945.554;
   const double VEHICLE_RADIUS = 1.5;
@@ -71,8 +71,8 @@ private:
   //weight for each cost function
   const vector<double> cost_functions_weights_ = {
       500, //CollisionCost
-      20, //BufferCost
-      5, //ChangeLaneCost
+      30, //BufferCost
+      10, //ChangeLaneCost
   };
 
   const vector<string> cost_functions_names = {
