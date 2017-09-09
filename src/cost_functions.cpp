@@ -130,9 +130,12 @@ double CostFunctions::BufferCost(const Vehicle &ego_vehicle,
 //  double nearest_approach = FindNearestApproachDuringTrajectory(vehicles,
 //      trajectory, true);
 
-  double end_s = trajectory.s_values[trajectory.s_values.size()-1];
-  double nearest_approach = FindMinimumDistanceToVehicle(vehicles, end_s,
-      trajectory.lane, trajectory.d_values.size() * 0.02, true);
+//  double end_s = trajectory.s_values[trajectory.s_values.size()-1];
+//  double nearest_approach = FindMinimumDistanceToVehicle(vehicles, end_s,
+//      trajectory.lane, trajectory.d_values.size() * 0.02, true);
+
+  double nearest_approach = FindNearestApproachDuringTrajectory(vehicles,
+        trajectory, true);
 
   if (nearest_approach > BUFFER_DISTANCE) {
     return 0.0;
