@@ -188,6 +188,6 @@ CartesianTrajectory TrajectoryGenerator::GenerateTrajectory(const Vehicle &ego_v
     next_y_vals.push_back(y);
   }
 
-  return CartesianTrajectory(next_x_vals, next_y_vals);
+  return CartesianTrajectory(next_x_vals, next_y_vals, ref_velocity, proposed_lane);
 }
 

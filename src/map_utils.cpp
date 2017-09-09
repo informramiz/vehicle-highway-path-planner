@@ -204,7 +204,7 @@ FrenetTrajectory MapUtils::CartesianToFrenet(const CartesianTrajectory &cartesia
     prev_y = next_y;
   }
 
-  return FrenetTrajectory(s_values, d_values);
+  return FrenetTrajectory(s_values, d_values, cartesian_trajectory.reference_velocity, cartesian_trajectory.lane);
 }
 
 CartesianTrajectory MapUtils::FrenetToCartesian(const FrenetTrajectory &frenet_trajectory) {
@@ -219,7 +219,7 @@ CartesianTrajectory MapUtils::FrenetToCartesian(const FrenetTrajectory &frenet_t
     y_values.push_back(xy[1]);
   }
 
-  return CartesianTrajectory(x_values, y_values);
+  return CartesianTrajectory(x_values, y_values, frenet_trajectory.reference_velocity, frenet_trajectory.lane);
 }
 
 void MapUtils::CheckInitialization() {
