@@ -168,23 +168,31 @@ double CostFunctions::BufferCost(const Vehicle &ego_vehicle,
 //  double nearest_approach = FindNearestApproachDuringTrajectory(vehicles,
 //      trajectory, true);
 
-//  double end_s = trajectory.s_values[trajectory.s_values.size()-1];
-//  double nearest_approach = FindMinimumDistanceToVehicle(vehicles, end_s,
-//      trajectory.lane, trajectory.d_values.size() * 0.02, true);
+  double delta_t = trajectory.s_values.size() * 0.02;
+  double end_s = trajectory.s_values[trajectory.s_values.size()-1];
+  int index = FindMinimumDistanceVehicleIndex(vehicles, end_s,
+      trajectory.lane, delta_t, true);
 
-  vector<double> nearest_approach = FindNearestApproachDuringTrajectory(vehicles,
-        trajectory, true);
-
-    double distance = nearest_approach[0];
-    double ego_vehicle_s = nearest_approach[1];
-    double vehicle_index = nearest_approach[2];
-    double time_of_approach = nearest_approach[3];
-
-  if (distance > BUFFER_DISTANCE) {
+  if (index == -1) {
     return 0.0;
   }
+  double distance = vehicles[index].state_at(delta_t)[1] - end_s;
 
-  return Utils::logistic((2 * BUFFER_DISTANCE * (1 - time_of_approach) / distance));
+  return Utils::logistic(2 * BUFFER_DISTANCE / distance);
+
+//  vector<double> nearest_approach = FindNearestApproachDuringTrajectory(vehicles,
+//        trajectory, true);
+//
+//    double distance = nearest_approach[0];
+//    double ego_vehicle_s = nearest_approach[1];
+//    double vehicle_index = nearest_approach[2];
+//    double time_of_approach = nearest_approach[3];
+//
+//  if (distance > BUFFER_DISTANCE) {
+//    return 0.0;
+//  }
+//
+//  return Utils::logistic((2 * BUFFER_DISTANCE * (1 - time_of_approach) / distance));
 }
 
 double CostFunctions::ChangeLaneCost(const Vehicle &ego_vehicle,
