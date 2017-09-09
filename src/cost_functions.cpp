@@ -114,7 +114,7 @@ double CostFunctions::CollisionCost(const Vehicle &ego_vehicle,
   double nearest_approach = FindNearestApproachDuringTrajectory(vehicles,
       trajectory, false);
 
-  if (nearest_approach < 10) {
+  if (nearest_approach < COLLISION_DISTANCE) {
     return 1.0;
   } else {
     return 0.0;
