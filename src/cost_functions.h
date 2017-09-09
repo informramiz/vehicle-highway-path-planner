@@ -70,7 +70,7 @@ private:
 
   //weight for each cost function
   const vector<double> cost_functions_weights_ = {
-      500, //CollisionCost
+      1000, //CollisionCost
       30, //BufferCost
       10, //ChangeLaneCost
   };
