@@ -1,8 +1,7 @@
-# CarND-Path-Planning-Project
-Self-Driving Car Engineer Nanodegree Program
-   
-### Simulator.
-You can download the Simulator which contains the Path Planning Project from the [releases tab (https://github.com/udacity/self-driving-car-sim/releases).
+# Autonomous Vehicle Highway Path Planner
+A path planner that is able to create smooth, safe paths for the car to follow along a 3 lane highway with traffic. 
+
+![demo](demo/animated.gif)
 
 ### Goals
 In this project goal is to safely navigate around a virtual highway with other traffic that is driving +-10 MPH of the 50 MPH speed limit. You will be provided the car's localization and sensor fusion data, there is also a sparse map list of waypoints around the highway. The car should try to go as close as possible to the 50 MPH speed limit, which means passing slower traffic when possible, note that other cars will try to change lanes too. The car should avoid hitting other cars at all cost as well as driving inside of the marked road lanes at all times, unless going from one lane to another. The car should be able to make one complete loop around the 6946m highway. Since the car is trying to go 50 MPH, it should take a little over 5 minutes to complete 1 loop. Also the car should not experience total acceleration over 10 m/s^2 and jerk that is greater than 50 m/s^3.
@@ -28,8 +27,8 @@ For smooth trajectory generation I have used [spline](http://kluge.in-chemnitz.d
 ### Trajectory Cost Calculation
 For calculating cost for any trajectory, I have define 3 cost functions in `cost_functions.cpp` file.
 
-1. **CollisionCost** function `weight 500`, to avoid collision with other vehicles.
-2. **BufferCost** function with `weight 30`, to keep a buffer distance from vehicles ahead.
+1. **CollisionCost** function with `weight 1000` and `collision distance 20`, to avoid collision with other vehicles. Collision distance can be decreased further but I wanted to keep it hight for safe side. For current lane the CollisionCost function always consider cost 0 because `collision avoidance module` in path planner file will kick in to handle that.
+2. **BufferCost** function with `weight 30` and `buffer distance 30`, to keep a buffer distance from vehicles ahead.
 3. **ChangeLaneCost** function with `weight 10`, to avoid change of lanes just because there is a small benefit. Change lane cost should only happen if it benefits considerly not because we can achieve 50cm more buffer distance.
 
 ### Path Planning
@@ -110,6 +109,10 @@ A really helpful resource for doing this project and creating smooth trajectorie
 
 ---
 
+### Simulator.
+You can download the Simulator which contains the Path Planning Project from the [releases tab (https://github.com/udacity/self-driving-car-sim/releases).
+
+                                                           
 ## Dependencies
 
 * cmake >= 3.5
