@@ -21,7 +21,27 @@ For smooth trajectory generation I have used [spline](http://kluge.in-chemnitz.d
 3. Convert these points from map coordinates to vehicle coordinates for ease of math.
 4. Fit a `spline` through these points using which points for trajectory will be generated.
 5. To keep acceleration and velocity smooth and to avoid jerk I calculate a `point_space` (distance between each point) to make sure vehicle accelerates or decelerate smoothly. 
-6. By using this `point_space` and `spline` I generate 50 points (if previous path has some points left then 50-prev_path_size).
+6. By using this `point_space` and `spline` I generate 50 points (if previous path has some points left then 50-prev_path_size). Math for finding point space is given below.
+
+```
+We need to find the space between points on spline to
+to keep our desired velocity, to achieve that
+we can define some target on x-axis, target_x,
+and then find how many points should be there in between
+x-axis=0 and x-axis=target_x so that if we keep our desired
+velocity and each time step is 0.02 (20 ms) long then we achieve
+our target distance between 0 to target_x, target_dist
+
+formula: V = d / t
+as each timestep = 0.02 secs so
+formula: V = d / (0.02 * N)
+ref_v = target_dist / (0.02 * N)
+--> N = target_dist / (0.02 * ref_v)
+
+here N is: number of points from 0 to target_dist_x
+--> point_space = target_x / N
+```
+
 7. Convert these points back to map coordinates.
 
 ### Trajectory Cost Calculation
