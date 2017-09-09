@@ -149,10 +149,10 @@ double CostFunctions::CollisionCost(const Vehicle &ego_vehicle,
     return 1.0;
   } else if (ego_vehicle_s_at_time < other_vehicle_s //Case-2: If ego vehicle is behind and is moving faster
       && ego_vehicle.v > other_vehicle_v) {
-    return Utils::logistic(-timesteps_away);
+    return exp(-timesteps_away);
   } else if (ego_vehicle_s_at_time > other_vehicle_s ////Case-3: If ego vehicle is ahead and is moving slower
       && ego_vehicle.v < other_vehicle_v) {
-    return Utils::logistic(-timesteps_away);
+    return exp(-timesteps_away);
   }
 
   return 0.0;
