@@ -36,6 +36,12 @@ double Utils::rad2deg(double x) {
   return x * 180 / M_PI;
 }
 
+/**
+ * A function that returns a value between 0 and 1 for x in the
+ * range [0, infinity] and -1 to 1 for x in the range [-infinity, infinity].
+ *
+ * Useful for cost functions.
+ */
 double Utils::logistic(double x) {
   return (2.0 / (1 + exp(-x))) - 1.0;
 }
