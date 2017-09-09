@@ -69,7 +69,7 @@ vector<double> CostFunctions::FindNearestApproachDuringTrajectory(const vector<V
       timesteps = i;
     }
   }
-  printf("Found nearest approach %f at time %f and timesteps %d\n", min_distance, time_of_appraoch, timesteps);
+  printf("For lane %d, found nearest approach %f at time %f and timesteps %d\n", trajectory.lane, min_distance, time_of_appraoch, timesteps);
   return {min_distance, min_distance_ego_vehicle_s, double(nearest_vehicle_index), time_of_appraoch};
 }
 
