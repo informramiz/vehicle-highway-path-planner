@@ -178,9 +178,9 @@ double CostFunctions::BufferCost(const Vehicle &ego_vehicle,
   }
   double distance = vehicles[index].state_at(delta_t)[1] - end_s;
 
-  if (distance > BUFFER_DISTANCE) {
-    return 0.0;
-  }
+//  if (distance > BUFFER_DISTANCE) {
+//    return 0.0;
+//  }
 
   return Utils::logistic(2 * BUFFER_DISTANCE / distance);
 
