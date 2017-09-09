@@ -138,6 +138,10 @@ double CostFunctions::CollisionCost(const Vehicle &ego_vehicle,
   double other_vehicle_s = other_vehicle_state_at_time[1];
   double other_vehicle_v = other_vehicle_state_at_time[2];
 
+  if (trajectory.lane == current_lane) {
+    return 0.0;
+  }
+
   double timesteps_away = time_of_approach / 0.02;
   printf("Collision at time %f and timesteps %f\n", time_of_approach, timesteps_away);
 //  //if both s are equal then collision is imminent
@@ -151,7 +155,7 @@ double CostFunctions::CollisionCost(const Vehicle &ego_vehicle,
 //    return exp(-timesteps_away);
 //  }
 
-  return exp(-timesteps_away/5);
+  return exp(-timesteps_away/20.0);
 //  return 0.0;
 }
 
