@@ -89,7 +89,7 @@ double CostFunctions::FindMinimumDistanceToVehicle(const vector<Vehicle> &vehicl
     double other_vehicle_predicted_s = vehicles[i].state_at(delta_t)[1];
 
     //we only care about leading vehicles
-    if (other_vehicle_predicted_s <= ego_vehicle_s
+    if (other_vehicle_predicted_s < ego_vehicle_s
         && consider_only_leading_vehicles) {
       continue;
     }
