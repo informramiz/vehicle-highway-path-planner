@@ -46,12 +46,6 @@ vector<double> CostFunctions::FindNearestApproachDuringTrajectory(const vector<V
   const int num_timesteps = trajectory.s_values.size();
   double timestep = 0.02; //each point is 0.02 (20 ms) timesteps away from other
 
-  //ignore previous path points as we are assuming ego vehicle
-  //is already at the end of that path
-//  int start_point = previous_path_size > 0 ? previous_path_size - 1 : 0;
-//  cout << "start point: " << start_point << endl;
-
-
   double min_distance = 999999;
   int nearest_vehicle_index = -1;
   double min_distance_ego_vehicle_s = -1;
