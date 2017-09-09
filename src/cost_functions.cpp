@@ -128,8 +128,12 @@ double CostFunctions::BufferCost(const Vehicle &ego_vehicle,
                                  const int current_lane) {
   //for each point in trajectory predict where other vehicle
   //will be at that point in time to see if there is a collision
-  double nearest_approach = FindNearestApproachDuringTrajectory(vehicles,
-      trajectory, true);
+//  double nearest_approach = FindNearestApproachDuringTrajectory(vehicles,
+//      trajectory, true);
+
+  double end_d = trajectory.d_values[trajectory.d_values.size()-1];
+  double end_s = trajectory.s_values[trajectory.s_values.size()-1];
+  double nearest_approach = FindMinimumDistanceToVehicle(vehicles, end_s, end_d, trajectory.d_values.size() * 0.02, true);
 
   if (nearest_approach > BUFFER_DISTANCE) {
     return 0.0;
