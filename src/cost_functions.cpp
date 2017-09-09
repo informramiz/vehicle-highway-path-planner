@@ -37,7 +37,7 @@ double CostFunctions::CalculateCost(const Vehicle &ego_vehicle,
   return total_cost;
 }
 
-double CostFunctions::FindNearestApproachDuringTrajectory(const vector<Vehicle>& vehicles,
+vector<double> CostFunctions::FindNearestApproachDuringTrajectory(const vector<Vehicle>& vehicles,
                                                           const FrenetTrajectory& trajectory,
                                                           bool consider_only_leading_vehicles) {
 
@@ -53,29 +53,37 @@ double CostFunctions::FindNearestApproachDuringTrajectory(const vector<Vehicle>&
 
 
   double min_distance = 999999;
+  int nearest_vehicle_index = -1;
+  double min_distance_ego_vehicle_s = -1;
+  double time_of_appraoch = 0.0;
+
   for (int i = 0; i < num_timesteps; ++i) {
     double s = trajectory.s_values[i];
     double d = trajectory.d_values[i];
 
     //calculate time at this point in trajectory
     double delta_t = (i) * timestep;
-    double nearest_approach = FindMinimumDistanceToVehicle(vehicles, s,
+    int vehicle_index = FindMinimumDistanceVehicleIndex(vehicles, s,
         trajectory.lane, delta_t, consider_only_leading_vehicles);
 
-    if (nearest_approach < min_distance) {
-      min_distance = nearest_approach;
+    double distance = vehicle_index != -1 ? abs(vehicles[vehicle_index].s - s) : 999999;
+    if (distance < min_distance) {
+      min_distance = distance;
+      nearest_vehicle_index = vehicle_index;
+      min_distance_ego_vehicle_s = s;
+      time_of_appraoch = delta_t;
     }
   }
-  return min_distance;
+  return {min_distance, min_distance_ego_vehicle_s, double(nearest_vehicle_index), time_of_appraoch};
 }
 
-double CostFunctions::FindMinimumDistanceToVehicle(const vector<Vehicle> &vehicles,
+int CostFunctions::FindMinimumDistanceVehicleIndex(const vector<Vehicle> &vehicles,
                                                    const double ego_vehicle_s,
                                                    int ego_vehicle_lane,
                                                    double delta_t,
                                                    bool consider_only_leading_vehicles) {
   double min_distance = 999999;
-
+  int min_distance_vehicle_index = -1;
   //for compiler optimization get vehicles size first
   //and not in loop
   const int vehicles_count = vehicles.size();
@@ -97,10 +105,11 @@ double CostFunctions::FindMinimumDistanceToVehicle(const vector<Vehicle> &vehicl
     double distance = abs(ego_vehicle_s - other_vehicle_predicted_s);
     if (distance < min_distance) {
       min_distance = distance;
+      min_distance_vehicle_index = i;
     }
   }
 
-  return min_distance;
+  return min_distance_vehicle_index;
 }
 
 
@@ -111,14 +120,42 @@ double CostFunctions::CollisionCost(const Vehicle &ego_vehicle,
 
   //for each point in trajectory predict where other vehicle
   //will be at that point in time to see if there is a collision
-  double nearest_approach = FindNearestApproachDuringTrajectory(vehicles,
+  vector<double> nearest_approach = FindNearestApproachDuringTrajectory(vehicles,
       trajectory, false);
 
-  if (nearest_approach < COLLISION_DISTANCE) {
-    return 1.0;
-  } else {
+  double distance = nearest_approach[0];
+  double ego_vehicle_s_at_time = nearest_approach[1];
+  double vehicle_index = nearest_approach[2];
+  double time_of_approach = nearest_approach[3];
+
+  if (distance > COLLISION_DISTANCE) {
     return 0.0;
   }
+
+  cout << "nearest_approach(distance, s, vehicle index, time: " << endl;
+  Utils::print_vector(nearest_approach);
+
+  Vehicle other_vehicle = vehicles[vehicle_index];
+
+  //returns = [lane, s, v, a]
+  vector<double> other_vehicle_state_at_time = other_vehicle.state_at(time_of_approach);
+  double other_vehicle_s = other_vehicle_state_at_time[1];
+  double other_vehicle_v = other_vehicle_state_at_time[2];
+
+  double timesteps_away = time_of_approach / 0.02;
+  printf("Collision at time %f and timesteps %f\n", time_of_approach, timesteps_away);
+  //if both s are equal then collision is imminent
+  if (ego_vehicle_s_at_time == other_vehicle_s) {
+    return 1.0;
+  } else if (ego_vehicle_s_at_time < other_vehicle_s //Case-2: If ego vehicle is behind and is moving faster
+      && ego_vehicle.v > other_vehicle_v) {
+    return Utils::logistic(-timesteps_away);
+  } else if (ego_vehicle_s_at_time > other_vehicle_s ////Case-3: If ego vehicle is ahead and is moving slower
+      && ego_vehicle.v < other_vehicle_v) {
+    return Utils::logistic(-timesteps_away);
+  }
+
+  return 0.0;
 }
 
 double CostFunctions::BufferCost(const Vehicle &ego_vehicle,
@@ -134,14 +171,19 @@ double CostFunctions::BufferCost(const Vehicle &ego_vehicle,
 //  double nearest_approach = FindMinimumDistanceToVehicle(vehicles, end_s,
 //      trajectory.lane, trajectory.d_values.size() * 0.02, true);
 
-  double nearest_approach = FindNearestApproachDuringTrajectory(vehicles,
+  vector<double> nearest_approach = FindNearestApproachDuringTrajectory(vehicles,
         trajectory, true);
 
-  if (nearest_approach > BUFFER_DISTANCE) {
+    double distance = nearest_approach[0];
+    double ego_vehicle_s = nearest_approach[1];
+    double vehicle_index = nearest_approach[2];
+    double time_of_approach = nearest_approach[3];
+
+  if (distance > BUFFER_DISTANCE) {
     return 0.0;
   }
 
-  return Utils::logistic(2 * BUFFER_DISTANCE / nearest_approach);
+  return Utils::logistic(2 * BUFFER_DISTANCE / distance);
 }
 
 double CostFunctions::ChangeLaneCost(const Vehicle &ego_vehicle,

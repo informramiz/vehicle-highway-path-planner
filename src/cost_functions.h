@@ -41,7 +41,7 @@ public:
                     const int current_lane);
 
 private:
-  double FindMinimumDistanceToVehicle(const vector<Vehicle> &vehicles,
+  int FindMinimumDistanceVehicleIndex(const vector<Vehicle> &vehicles,
                                       const double s,
                                       int ego_vehicle_lane,
                                       double delta_t,
@@ -58,7 +58,7 @@ private:
       const FrenetTrajectory &trajectory,
       const int current_lane);
 
-  double FindNearestApproachDuringTrajectory(
+  vector<double> FindNearestApproachDuringTrajectory(
       const vector<Vehicle>& vehicles, const FrenetTrajectory& trajectory,
       bool consider_only_leading_vehicles);
 
