@@ -43,7 +43,7 @@ public:
 private:
   double FindMinimumDistanceToVehicle(const vector<Vehicle> &vehicles,
                                       const double s,
-                                      const double d,
+                                      int ego_vehicle_lane,
                                       double delta_t,
                                       bool consider_only_leading_vehicles);
 

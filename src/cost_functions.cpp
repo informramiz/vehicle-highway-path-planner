@@ -60,7 +60,7 @@ double CostFunctions::FindNearestApproachDuringTrajectory(const vector<Vehicle>&
     //calculate time at this point in trajectory
     double delta_t = (i) * timestep;
     double nearest_approach = FindMinimumDistanceToVehicle(vehicles, s,
-        d, delta_t, consider_only_leading_vehicles);
+        trajectory.lane, delta_t, consider_only_leading_vehicles);
 
     if (nearest_approach < min_distance) {
       min_distance = nearest_approach;
@@ -71,10 +71,9 @@ double CostFunctions::FindNearestApproachDuringTrajectory(const vector<Vehicle>&
 
 double CostFunctions::FindMinimumDistanceToVehicle(const vector<Vehicle> &vehicles,
                                                    const double ego_vehicle_s,
-                                                   const double ego_vehicle_d,
+                                                   int ego_vehicle_lane,
                                                    double delta_t,
                                                    bool consider_only_leading_vehicles) {
-  int ego_vehicle_lane = MapUtils::GetLane(ego_vehicle_d);
   double min_distance = 999999;
 
   //for compiler optimization get vehicles size first
@@ -131,9 +130,9 @@ double CostFunctions::BufferCost(const Vehicle &ego_vehicle,
 //  double nearest_approach = FindNearestApproachDuringTrajectory(vehicles,
 //      trajectory, true);
 
-  double end_d = trajectory.d_values[trajectory.d_values.size()-1];
   double end_s = trajectory.s_values[trajectory.s_values.size()-1];
-  double nearest_approach = FindMinimumDistanceToVehicle(vehicles, end_s, end_d, trajectory.d_values.size() * 0.02, true);
+  double nearest_approach = FindMinimumDistanceToVehicle(vehicles, end_s,
+      trajectory.lane, trajectory.d_values.size() * 0.02, true);
 
   if (nearest_approach > BUFFER_DISTANCE) {
     return 0.0;
@@ -146,15 +145,12 @@ double CostFunctions::ChangeLaneCost(const Vehicle &ego_vehicle,
                   const vector<Vehicle> &vehicles,
                   const FrenetTrajectory &trajectory,
                   const int current_lane) {
-  double start_d = trajectory.d_values[0];
-  int start_lane = MapUtils::GetLane(start_d);
-
   double end_d = trajectory.d_values[trajectory.d_values.size()-1];
   int end_lane = MapUtils::GetLane(end_d);
 
   //we want to penalize lane change as it is not cheap
-  if (current_lane != end_lane) {
-    printf("start_lane, end_lane: %d, %d\n", start_lane, ego_vehicle.lane);
+  if (current_lane != trajectory.lane) {
+    printf("start_lane, end_lane: %d, %d\n", current_lane, trajectory.lane);
     return 1.0;
   }
 
